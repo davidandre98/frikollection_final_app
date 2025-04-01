@@ -1,4 +1,4 @@
-# frikollection_final_app
+# Frikollection Final App
 Aplicació per a seguiment de col·leccions (merchandising friki)
 
 ## Autors
