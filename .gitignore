@@ -1,0 +1,28 @@
+# Build i publicació
+bin/
+obj/
+*.dll
+*.exe
+
+# Fitxers de configuració d'usuari
+*.user
+*.suo
+
+# Fitxers de configuració de Visual Studio i Rider
+.vs/
+
+# Fitxers temporals
+*.log
+*.tmp
+
+# Fitxers secrets o entorns
+*.env
+*.secrets.json
+appsettings.Development.json
+
+# Paquets NuGet generats
+*.nupkg
+*.snupkg
+
+# Resultats de test
+TestResults/
