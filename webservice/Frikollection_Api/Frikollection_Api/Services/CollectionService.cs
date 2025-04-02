@@ -16,6 +16,12 @@ namespace Frikollection_Api.Services
 
         public async Task<Collection> CreateCollectionAsync(CreateCollectionDto dto)
         {
+            var nameExists = await _context.Collections
+                .AnyAsync(c => c.UserId == dto.UserId && c.Name == dto.Name);
+
+            if (nameExists)
+                throw new InvalidOperationException("Ja existeix una col·lecció amb aquest nom per a aquest usuari.");
+
             var collection = new Collection
             {
                 CollectionId = Guid.NewGuid(),
@@ -48,6 +54,25 @@ namespace Frikollection_Api.Services
             _context.Collections.Remove(collection);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<Collection?> UpdateCollectionAsync(Guid id, UpdateCollectionDto dto)
+        {
+            var collection = await _context.Collections.FindAsync(id);
+            if (collection == null)
+                return null;
+
+            var duplicateName = await _context.Collections
+                .AnyAsync(c => c.UserId == collection.UserId && c.Name == dto.Name && c.CollectionId != id);
+
+            if (duplicateName)
+                throw new InvalidOperationException("Ja existeix una altra col·lecció amb aquest nom per a aquest usuari.");
+
+            collection.Name = dto.Name;
+            collection.Private = dto.Private;
+
+            await _context.SaveChangesAsync();
+            return collection;
         }
     }
 }

@@ -2,15 +2,12 @@
 
 namespace Frikollection_Api.DTOs.Collection
 {
-    public class CreateCollectionDto
+    public class UpdateCollectionDto
     {
         [Required]
         [MinLength(1)]
         public string Name { get; set; }
 
-        public bool Private { get; set; } = false;
-        
-        [Required]
-        public Guid UserId { get; set; }  // A quin usuari pertany
+        public bool Private { get; set; }
     }
 }

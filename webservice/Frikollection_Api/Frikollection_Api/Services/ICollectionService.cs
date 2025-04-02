@@ -9,5 +9,6 @@ namespace Frikollection_Api.Services
         Task<IEnumerable<Collection>> GetAllCollectionsAsync();
         Task<Collection?> GetCollectionByIdAsync(Guid id);
         Task<bool> DeleteCollectionAsync(Guid id);
+        Task<Collection?> UpdateCollectionAsync(Guid id, UpdateCollectionDto dto);
     }
 }
