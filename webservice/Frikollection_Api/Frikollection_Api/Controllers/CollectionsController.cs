@@ -51,7 +51,9 @@ namespace Frikollection_Api.Controllers
         public async Task<ActionResult<Collection>> GetById(Guid id)
         {
             var collection = await _collectionService.GetCollectionByIdAsync(id);
-            if (collection == null) return NotFound();
+            if (collection == null)
+                return NotFound(new { message = "Col·lecció no trobada." });
+
             return Ok(collection);
         }
 
@@ -59,11 +61,14 @@ namespace Frikollection_Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var deleted = await _collectionService.DeleteCollectionAsync(id);
-            if (!deleted) return NotFound();
+            var result = await _collectionService.DeleteCollectionAsync(id);
+            if (!result)
+                return NotFound(new { message = "Col·lecció no trobada." });
+
             return NoContent();
         }
 
+        // PUT: api/collections/{id}
         [HttpPut("{id}")]
         public async Task<ActionResult<Collection>> Update(Guid id, [FromBody] UpdateCollectionDto dto)
         {
@@ -71,7 +76,7 @@ namespace Frikollection_Api.Controllers
             {
                 var updated = await _collectionService.UpdateCollectionAsync(id, dto);
                 if (updated == null)
-                    return NotFound();
+                    return NotFound(new { message = "Col·lecció no trobada." });
 
                 return Ok(updated);
             }

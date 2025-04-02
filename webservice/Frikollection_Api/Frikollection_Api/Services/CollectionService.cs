@@ -74,5 +74,44 @@ namespace Frikollection_Api.Services
             await _context.SaveChangesAsync();
             return collection;
         }
+
+        public async Task<IEnumerable<UserCollectionDto>> GetUserCollectionsAsync(Guid userId, string? visibility = null)
+        {
+            var query = _context.Collections.AsQueryable();
+
+            query = query.Where(c => c.UserId == userId);
+
+            if (visibility == "public")
+                query = query.Where(c => c.Private == false);
+
+            else if (visibility == "private")
+                query = query.Where(c => c.Private == true);
+
+            var collections = await query
+                .Select(c => new UserCollectionDto
+                {
+                    Name = c.Name,
+                    Private = c.Private,
+                    CreationDate = c.CreationDate
+                })
+                .ToListAsync();
+
+            return collections;
+        }
+
+        public async Task<IEnumerable<UserCollectionDto>> GetPublicCollectionsByUserAsync(Guid userId)
+        {
+            var collections = await _context.Collections
+                .Where(c => c.UserId == userId && c.Private == false)
+                .Select(c => new UserCollectionDto
+                {
+                    Name = c.Name,
+                    Private = c.Private,
+                    CreationDate = c.CreationDate
+                })
+                .ToListAsync();
+
+            return collections;
+        }
     }
 }
