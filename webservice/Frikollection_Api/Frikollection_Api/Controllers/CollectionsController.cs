@@ -85,5 +85,29 @@ namespace Frikollection_Api.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
+
+        // POST: api/collections/{id}/follow
+        [HttpPost("{id}/follow")]
+        public async Task<IActionResult> FollowCollection(Guid id, [FromQuery] Guid userId)
+        {
+            var result = await _collectionService.FollowCollectionAsync(userId, id);
+
+            if (!result)
+                return BadRequest(new { message = "No s'ha pogut seguir la col·lecció. Potser no existeix o és privada." });
+
+            return Ok(new { message = "Col·lecció seguida correctament." });
+        }
+
+        // DELETE: api/collections/{id}/follow
+        [HttpDelete("{id}/follow")]
+        public async Task<IActionResult> UnfollowCollection(Guid id, [FromQuery] Guid userId)
+        {
+            var result = await _collectionService.UnfollowCollectionAsync(userId, id);
+
+            if (!result)
+                return NotFound(new { message = "No estàs seguint aquesta col·lecció o no existeix." });
+
+            return Ok(new { message = "Has deixat de seguir la col·lecció." });
+        }
     }
 }

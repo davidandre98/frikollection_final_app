@@ -12,5 +12,7 @@ namespace Frikollection_Api.Services
         Task<Collection?> UpdateCollectionAsync(Guid id, UpdateCollectionDto dto);
         Task<IEnumerable<UserCollectionDto>> GetUserCollectionsAsync(Guid userId, string? visibility = null);
         Task<IEnumerable<UserCollectionDto>> GetPublicCollectionsByUserAsync(Guid userId);
+        Task<bool> FollowCollectionAsync(Guid userId, Guid collectionId);
+        Task<bool> UnfollowCollectionAsync(Guid userId, Guid collectionId);
     }
 }

@@ -113,5 +113,59 @@ namespace Frikollection_Api.Services
 
             return collections;
         }
+
+        public async Task<bool> FollowCollectionAsync(Guid userId, Guid collectionId)
+        {
+            var collection = await _context.Collections.FindAsync(collectionId);
+            if (collection == null || collection.Private == true)
+                return false;
+
+            // Verifiquem si ja la segueix
+            var alreadyFollowing = await _context.UserFollowCollections
+                .AnyAsync(f => f.UserId == userId && f.CollectionId == collectionId);
+
+            if (alreadyFollowing)
+                return true;
+
+            var follow = new UserFollowCollection
+            {
+                UserId = userId,
+                CollectionId = collectionId,
+                FollowDate = DateTime.UtcNow,
+                NotificationsEnabled = true
+            };
+
+            _context.UserFollowCollections.Add(follow);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> UnfollowCollectionAsync(Guid userId, Guid collectionId)
+        {
+            var follow = await _context.UserFollowCollections
+                .FirstOrDefaultAsync(f => f.UserId == userId && f.CollectionId == collectionId);
+
+            if (follow == null)
+                return false;
+
+            _context.UserFollowCollections.Remove(follow);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<IEnumerable<UserCollectionDto>> GetFollowedCollectionsAsync(Guid userId)
+        {
+            var collections = await _context.UserFollowCollections
+                .Where(f => f.UserId == userId && f.Collection.Private == false)
+                .Select(f => new UserCollectionDto
+                {
+                    Name = f.Collection.Name,
+                    Private = f.Collection.Private,
+                    CreationDate = f.Collection.CreationDate
+                })
+                .ToListAsync();
+
+            return collections;
+        }
     }
 }

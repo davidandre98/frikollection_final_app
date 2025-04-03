@@ -247,6 +247,7 @@ public partial class FrikollectionContext : DbContext
             entity.Property(e => e.CollectionId).HasColumnName("collection_id");
             entity.Property(e => e.FollowDate)
                 .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
                 .HasColumnName("follow_date");
             entity.Property(e => e.NotificationsEnabled)
                 .HasDefaultValue(true)

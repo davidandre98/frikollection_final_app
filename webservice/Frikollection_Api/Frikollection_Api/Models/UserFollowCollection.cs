@@ -9,7 +9,7 @@ public partial class UserFollowCollection
 
     public Guid CollectionId { get; set; }
 
-    public DateOnly? FollowDate { get; set; }
+    public DateTime? FollowDate { get; set; }
 
     public bool? NotificationsEnabled { get; set; }
 
