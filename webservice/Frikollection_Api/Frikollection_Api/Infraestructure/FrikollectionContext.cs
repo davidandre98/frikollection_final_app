@@ -20,6 +20,8 @@ public partial class FrikollectionContext : DbContext
 
     public virtual DbSet<CollectionProduct> CollectionProducts { get; set; }
 
+    public virtual DbSet<Notification> Notifications { get; set; }
+
     public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<ProductExtension> ProductExtensions { get; set; }
@@ -80,6 +82,42 @@ public partial class FrikollectionContext : DbContext
                 .HasConstraintName("FK__Collectio__produ__5629CD9C");
         });
 
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.NotificationId).HasName("PK__Notifica__E059842F6B0018F1");
+
+            entity.ToTable("Notification");
+
+            entity.Property(e => e.NotificationId)
+                .HasDefaultValueSql("(newid())")
+                .HasColumnName("notification_id");
+            entity.Property(e => e.CollectionId).HasColumnName("collection_id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.FollowerUserId).HasColumnName("follower_user_id");
+            entity.Property(e => e.IsRead).HasColumnName("is_read");
+            entity.Property(e => e.Message)
+                .HasMaxLength(300)
+                .HasColumnName("message");
+            entity.Property(e => e.RecipientUserId).HasColumnName("recipient_user_id");
+
+            entity.HasOne(d => d.Collection).WithMany(p => p.Notifications)
+                .HasForeignKey(d => d.CollectionId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Notification_Collection");
+
+            entity.HasOne(d => d.FollowerUser).WithMany(p => p.NotificationFollowerUsers)
+                .HasForeignKey(d => d.FollowerUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Notification_Follower");
+
+            entity.HasOne(d => d.RecipientUser).WithMany(p => p.NotificationRecipientUsers)
+                .HasForeignKey(d => d.RecipientUserId)
+                .HasConstraintName("FK_Notification_Recipient");
+        });
+
         modelBuilder.Entity<Product>(entity =>
         {
             entity.HasKey(e => e.ProductId).HasName("PK__Product__47027DF5B4D91685");
@@ -90,6 +128,9 @@ public partial class FrikollectionContext : DbContext
                 .HasDefaultValueSql("(newid())")
                 .HasColumnName("product_id");
             entity.Property(e => e.BigPicture).HasColumnName("big_picture");
+            entity.Property(e => e.Exclusive)
+                .HasMaxLength(100)
+                .HasColumnName("exclusive");
             entity.Property(e => e.Height).HasColumnName("height");
             entity.Property(e => e.ItemNumber)
                 .HasMaxLength(50)

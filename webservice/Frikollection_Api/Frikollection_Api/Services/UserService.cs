@@ -1,4 +1,5 @@
-﻿using Frikollection_Api.DTOs.User;
+﻿using Frikollection_Api.DTOs.Notification;
+using Frikollection_Api.DTOs.User;
 using Frikollection_Api.Infraestructure;
 using Frikollection_Api.Models;
 using Microsoft.AspNetCore.Identity;
@@ -153,6 +154,68 @@ namespace Frikollection_Api.Services
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<IEnumerable<NotificationDto>> GetNotificationsAsync(Guid userId)
+        {
+            var notifications = await _context.Notifications
+                .Where(n => n.RecipientUserId == userId)
+                .Include(n => n.FollowerUser)
+                .Include(n => n.Collection)
+                .OrderByDescending(n => n.CreatedAt)
+                .ToListAsync();
+
+            // Marcar com a llegides les que no ho estaven
+            var unreadNotifications = notifications.Where(n => !n.IsRead).ToList();
+            foreach (var notif in unreadNotifications)
+            {
+                notif.IsRead = true;
+            }
+
+            if (unreadNotifications.Any())
+                await _context.SaveChangesAsync();
+
+            return notifications.Select(n => new NotificationDto
+            {
+                Message = n.Message,
+                FollowerNickname = n.FollowerUser.Nickname,
+                CollectionName = n.Collection.Name,
+                CreatedAt = n.CreatedAt,
+                IsRead = n.IsRead
+            });
+        }
+
+        public async Task<int> GetUnreadNotificationCountAsync(Guid userId)
+        {
+            return await _context.Notifications
+                .Where(n => n.RecipientUserId == userId && !n.IsRead)
+                .CountAsync();
+        }
+
+        public async Task<bool> DeleteNotificationAsync(Guid notificationId, Guid userId)
+        {
+            var notification = await _context.Notifications
+                .FirstOrDefaultAsync(n => n.NotificationId == notificationId && n.RecipientUserId == userId);
+
+            if (notification == null)
+                return false;
+
+            _context.Notifications.Remove(notification);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<int> DeleteAllNotificationsAsync(Guid userId)
+        {
+            var notifications = await _context.Notifications
+                .Where(n => n.RecipientUserId == userId)
+                .ToListAsync();
+
+            if (!notifications.Any())
+                return 0;
+
+            _context.Notifications.RemoveRange(notifications);
+            return await _context.SaveChangesAsync();
         }
     }
 }

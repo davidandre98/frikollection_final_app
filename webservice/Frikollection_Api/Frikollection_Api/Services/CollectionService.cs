@@ -137,7 +137,43 @@ namespace Frikollection_Api.Services
 
             _context.UserFollowCollections.Add(follow);
             await _context.SaveChangesAsync();
+            await CreateFollowNotificationAsync(userId, collection);
             return true;
+        }
+
+        private async Task CreateFollowNotificationAsync(Guid followerUserId, Collection collection)
+        {
+            var recipient = collection.User;
+
+            if (recipient == null || recipient.UserId == followerUserId)
+                return;
+
+            var notificationsEnabled = await _context.UserFollowCollections
+                .Where(f => f.UserId == followerUserId && f.CollectionId == collection.CollectionId)
+                .Select(f => f.NotificationsEnabled)
+                .FirstOrDefaultAsync();
+
+            if (notificationsEnabled == false)
+                return;
+
+            var follower = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId == followerUserId);
+
+            if (follower == null)
+                return;
+
+            var notification = new Notification
+            {
+                RecipientUserId = recipient.UserId,
+                FollowerUserId = follower.UserId,
+                CollectionId = collection.CollectionId,
+                Message = $"{follower.Nickname} ha començat a seguir la teva col·lecció \"{collection.Name}\".",
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            };
+
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<bool> UnfollowCollectionAsync(Guid userId, Guid collectionId)

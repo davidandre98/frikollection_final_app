@@ -36,11 +36,31 @@ CREATE TABLE [Collection] (
 CREATE TABLE User_Follow_Collection (
     user_id UNIQUEIDENTIFIER NOT NULL,
     collection_id UNIQUEIDENTIFIER NOT NULL,
-    follow_date DATE DEFAULT GETDATE(),
+    follow_date DATETIME DEFAULT GETDATE(),
     notifications_enabled BIT DEFAULT 1,
     PRIMARY KEY (user_id, collection_id),
     FOREIGN KEY (user_id) REFERENCES [User](user_id) ON DELETE CASCADE,
     FOREIGN KEY (collection_id) REFERENCES [Collection](collection_id)
+);
+
+-- Notificacions
+CREATE TABLE Notification (
+    notification_id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    recipient_user_id UNIQUEIDENTIFIER NOT NULL,
+    follower_user_id UNIQUEIDENTIFIER NOT NULL,
+    collection_id UNIQUEIDENTIFIER NOT NULL,
+    message NVARCHAR(300) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT GETDATE(),
+    is_read BIT NOT NULL DEFAULT 0,
+
+    CONSTRAINT FK_Notification_Recipient FOREIGN KEY (recipient_user_id)
+        REFERENCES [User](user_id) ON DELETE CASCADE,
+
+    CONSTRAINT FK_Notification_Follower FOREIGN KEY (follower_user_id)
+        REFERENCES [User](user_id) ON DELETE NO ACTION,
+
+    CONSTRAINT FK_Notification_Collection FOREIGN KEY (collection_id)
+        REFERENCES [Collection](collection_id) ON DELETE NO ACTION
 );
 
 -- Tipus de producte
@@ -67,6 +87,7 @@ CREATE TABLE Product (
     status NVARCHAR(50),
     item_number NVARCHAR(50),
     license NVARCHAR(100),
+	exclusive NVARCHAR(100),
     width FLOAT,
     height FLOAT,
     value DECIMAL(10,2),

@@ -1,4 +1,5 @@
 ﻿using Frikollection_Api.DTOs.Collection;
+using Frikollection_Api.DTOs.Notification;
 using Frikollection_Api.DTOs.User;
 using Frikollection_Api.Models;
 using Frikollection_Api.Services;
@@ -121,6 +122,42 @@ namespace Frikollection_Api.Controllers
                 return NotFound(new { message = "Usuari no trobat." });
 
             return NoContent();
+        }
+
+        // GET: api/users/{id}/notifications
+        [HttpGet("{id}/notifications")]
+        public async Task<ActionResult<IEnumerable<NotificationDto>>> GetNotifications(Guid id)
+        {
+            var notifications = await _userService.GetNotificationsAsync(id);
+
+            return Ok(notifications);
+        }
+
+        // GET: api/users/{id}/notifications/unread-count
+        [HttpGet("{id}/notifications/unread-count")]
+        public async Task<ActionResult<int>> GetUnreadNotificationCount(Guid id)
+        {
+            var count = await _userService.GetUnreadNotificationCountAsync(id);
+            return Ok(count);
+        }
+
+        // DELETE: api/users/{id}/notifications/{id}
+        [HttpDelete("{userId}/notifications/{notificationId}")]
+        public async Task<IActionResult> DeleteNotification(Guid userId, Guid notificationId)
+        {
+            var success = await _userService.DeleteNotificationAsync(notificationId, userId);
+            if (!success)
+                return NotFound(new { message = "Notificació no trobada o no tens permisos per eliminar-la." });
+
+            return Ok(new { message = "Notificació eliminada." });
+        }
+
+        // DELETE: api/users/{id}/notifications
+        [HttpDelete("{id}/notifications")]
+        public async Task<IActionResult> DeleteAllNotifications(Guid id)
+        {
+            var deleted = await _userService.DeleteAllNotificationsAsync(id);
+            return Ok(new { message = $"S'han eliminat {deleted} notificacions." });
         }
     }
 }

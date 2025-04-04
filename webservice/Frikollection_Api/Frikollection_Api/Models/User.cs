@@ -33,5 +33,9 @@ public partial class User
 
     public virtual ICollection<Collection> Collections { get; set; } = new List<Collection>();
 
+    public virtual ICollection<Notification> NotificationFollowerUsers { get; set; } = new List<Notification>();
+
+    public virtual ICollection<Notification> NotificationRecipientUsers { get; set; } = new List<Notification>();
+
     public virtual ICollection<UserFollowCollection> UserFollowCollections { get; set; } = new List<UserFollowCollection>();
 }
