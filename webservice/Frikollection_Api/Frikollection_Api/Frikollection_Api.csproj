@@ -17,8 +17,10 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\uploads\avatar\" />
+    <Folder Include="wwwroot\uploads\funko\" />
+    <Folder Include="wwwroot\uploads\figure\" />
+    <Folder Include="wwwroot\uploads\tcg\" />
     <Folder Include="wwwroot\uploads\tag\" />
-    <Folder Include="wwwroot\uploads\product\" />
   </ItemGroup>
 
 </Project>

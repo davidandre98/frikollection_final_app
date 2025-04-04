@@ -7,7 +7,8 @@ namespace Frikollection_Api.Services
     public interface IUserService
     {
         Task<User> RegisterAsync(RegisterUserDto dto);
-        Task<User?> GetByIdAsync(Guid id);
+        Task<User?> LoginAsync(LoginDto dto);
+        Task<UserDto?> GetByIdAsync(Guid id);
         Task<User?> UpdateUserAsync(Guid id, UpdateUserDto dto);
         Task<PublicUserDto?> GetPublicProfileAsync(Guid id);
         Task<UserProfileDto?> GetUserProfileAsync(Guid id);

@@ -116,7 +116,9 @@ namespace Frikollection_Api.Services
 
         public async Task<bool> FollowCollectionAsync(Guid userId, Guid collectionId)
         {
-            var collection = await _context.Collections.FindAsync(collectionId);
+            var collection = await _context.Collections
+                .Include(c => c.User)
+                .FirstOrDefaultAsync(c => c.CollectionId == collectionId);
             if (collection == null || collection.Private == true)
                 return false;
 
@@ -141,6 +143,7 @@ namespace Frikollection_Api.Services
             return true;
         }
 
+        // Crea notificació a usuari propietari sobre el seguiment d'un altre usuari
         private async Task CreateFollowNotificationAsync(Guid followerUserId, Collection collection)
         {
             var recipient = collection.User;
@@ -167,7 +170,7 @@ namespace Frikollection_Api.Services
                 RecipientUserId = recipient.UserId,
                 FollowerUserId = follower.UserId,
                 CollectionId = collection.CollectionId,
-                Message = $"{follower.Nickname} ha començat a seguir la teva col·lecció \"{collection.Name}\".",
+                Message = $"{follower.Nickname} ha començat a seguir la teva col·lecció {collection.Name}.",
                 CreatedAt = DateTime.UtcNow,
                 IsRead = false
             };
@@ -185,6 +188,15 @@ namespace Frikollection_Api.Services
                 return false;
 
             _context.UserFollowCollections.Remove(follow);
+
+            var notification = await _context.Notifications
+                .FirstOrDefaultAsync(n =>
+                    n.FollowerUserId == userId &&
+                    n.CollectionId == collectionId);
+
+            if (notification != null)
+                _context.Notifications.Remove(notification);
+
             await _context.SaveChangesAsync();
             return true;
         }
@@ -202,6 +214,68 @@ namespace Frikollection_Api.Services
                 .ToListAsync();
 
             return collections;
+        }
+
+        public async Task<bool> AddProductToCollectionAsync(AddProductToCollectionDto dto)
+        {
+            var exists = await _context.CollectionProducts
+                .AnyAsync(cp => cp.CollectionId == dto.CollectionId && cp.ProductId == dto.ProductId);
+            if (exists) return false;
+
+            _context.CollectionProducts.Add(new CollectionProduct
+            {
+                CollectionId = dto.CollectionId,
+                ProductId = dto.ProductId
+            });
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> RemoveProductFromCollectionAsync(Guid collectionId, Guid productId)
+        {
+            var entry = await _context.CollectionProducts.FindAsync(collectionId, productId);
+            if (entry == null) return false;
+
+            _context.CollectionProducts.Remove(entry);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<IEnumerable<Product>> GetProductsInCollectionAsync(Guid collectionId)
+        {
+            return await _context.CollectionProducts
+                .Where(cp => cp.CollectionId == collectionId)
+                .Include(cp => cp.Product)
+                    .ThenInclude(p => p.ProductType)
+                .Include(cp => cp.Product)
+                    .ThenInclude(p => p.ProductExtension)
+                .Include(cp => cp.Product)
+                    .ThenInclude(p => p.Tags)
+                .Select(cp => cp.Product)
+                .ToListAsync();
+        }
+
+        public async Task<CollectionStatsDto> GetCollectionStatsAsync(Guid collectionId)
+        {
+            var products = await _context.CollectionProducts
+                .Where(cp => cp.CollectionId == collectionId)
+                .Include(cp => cp.Product)
+                    .ThenInclude(p => p.ProductType)
+                .Select(cp => cp.Product)
+                .ToListAsync();
+
+            var stats = new CollectionStatsDto
+            {
+                CollectionId = collectionId,
+                TotalProducts = products.Count,
+                TotalValue = products.Sum(p => p.Value ?? 0),
+                ProductTypes = products
+                    .GroupBy(p => p.ProductType?.TypeName ?? "Sense Tipus")
+                    .ToDictionary(g => g.Key, g => g.Count())
+            };
+
+            return stats;
         }
     }
 }

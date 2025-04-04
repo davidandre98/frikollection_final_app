@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Frikollection_Api.DTOs.User
 {
-    public class RegisterUserDto
+    public class RegisterUserDto : IValidatableObject
     {
         [Required]
         [MinLength(3)]
@@ -15,6 +15,18 @@ namespace Frikollection_Api.DTOs.User
 
         [Required]
         public string Password { get; set; }
+
+        [Required]
+        [MinLength(2)]
+        public string FirstName { get; set; }
+
+        [Required]
+        [MinLength(2)]
+        public string LastName { get; set; }
+
+        [Required]
+        [DataType(DataType.Date)]
+        public DateOnly Birthday { get; set; }
 
         // Validació personalitzada de la contrasenya
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

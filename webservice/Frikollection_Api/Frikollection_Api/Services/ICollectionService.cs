@@ -14,5 +14,10 @@ namespace Frikollection_Api.Services
         Task<IEnumerable<UserCollectionDto>> GetPublicCollectionsByUserAsync(Guid userId);
         Task<bool> FollowCollectionAsync(Guid userId, Guid collectionId);
         Task<bool> UnfollowCollectionAsync(Guid userId, Guid collectionId);
+        Task<IEnumerable<UserCollectionDto>> GetFollowedCollectionsAsync(Guid userId);
+        Task<bool> AddProductToCollectionAsync(AddProductToCollectionDto dto);
+        Task<bool> RemoveProductFromCollectionAsync(Guid collectionId, Guid productId);
+        Task<IEnumerable<Product>> GetProductsInCollectionAsync(Guid collectionId);
+        Task<CollectionStatsDto> GetCollectionStatsAsync(Guid collectionId);
     }
 }

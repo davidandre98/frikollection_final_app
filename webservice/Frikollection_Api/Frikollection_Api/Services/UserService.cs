@@ -1,4 +1,5 @@
-﻿using Frikollection_Api.DTOs.Notification;
+﻿using Frikollection_Api.DTOs.Collection;
+using Frikollection_Api.DTOs.Notification;
 using Frikollection_Api.DTOs.User;
 using Frikollection_Api.Infraestructure;
 using Frikollection_Api.Models;
@@ -31,6 +32,11 @@ namespace Frikollection_Api.Services
                 UserId = Guid.NewGuid(),
                 Username = dto.Username,
                 Email = dto.Email,
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                Birthday = dto.Birthday,
+                Nickname = dto.FirstName,
+                Avatar = "https://localhost:7228/images/uploads/avatar/default.jpg",
                 RegisterDate = DateTime.UtcNow
             };
 
@@ -43,10 +49,66 @@ namespace Frikollection_Api.Services
             return user;
         }
 
-        public async Task<User?> GetByIdAsync(Guid id)
+        public async Task<UserDto?> GetByIdAsync(Guid id)
         {
-            return await _context.Users.FindAsync(id);
+            var user = await _context.Users
+                .Include(u => u.Collections)
+                    .ThenInclude(c => c.CollectionProducts)
+                .Include(u => u.UserFollowCollections)
+                    .ThenInclude(ufc => ufc.Collection)
+                        .ThenInclude(c => c.User)
+                .Include(u => u.NotificationRecipientUsers)
+                    .ThenInclude(n => n.FollowerUser)
+                .Include(u => u.NotificationRecipientUsers)
+                    .ThenInclude(n => n.Collection)
+                .FirstOrDefaultAsync(u => u.UserId == id);
+
+            if (user == null)
+                return null;
+
+            return new UserDto
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                Avatar = user.Avatar,
+                Nickname = user.Nickname,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Birthday = user.Birthday ?? default,
+                Biography = user.Biography,
+                RegisterDate = user.RegisterDate,
+                LastLogin = user.LastLogin,
+
+                OwnCollections = user.Collections.Select(c => new CollectionDto
+                {
+                    CollectionId = c.CollectionId,
+                    Name = c.Name,
+                    Private = c.Private ?? default,
+                    CreationDate = c.CreationDate ?? default,
+                    TotalProducts = c.CollectionProducts?.Count ?? 0
+                }).ToList(),
+
+                FollowedCollections = user.UserFollowCollections.Select(fc => new FollowedCollectionDto
+                {
+                    CollectionId = fc.Collection.CollectionId,
+                    Name = fc.Collection.Name,
+                    OwnerNickname = fc.Collection.User.Nickname,
+                    FollowDate = fc.FollowDate ?? default
+                }).ToList(),
+
+                Notifications = user.NotificationRecipientUsers.Select(n => new NotificationDto
+                {
+                    Message = n.Message,
+                    FollowerNickname = n.FollowerUser?.Nickname,
+                    CollectionName = n.Collection?.Name,
+                    CreatedAt = n.CreatedAt,
+                    IsRead = n.IsRead
+                }).ToList()
+            };
         }
+
 
         public async Task<User?> LoginAsync(LoginDto dto)
         {
@@ -60,6 +122,9 @@ namespace Frikollection_Api.Services
 
             if (result == PasswordVerificationResult.Failed)
                 return null;
+
+            user.LastLogin = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
 
             return user;
         }

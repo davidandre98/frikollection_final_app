@@ -5,6 +5,7 @@ using Frikollection_Api.Models;
 using Frikollection_Api.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Frikollection_Api.Controllers
 {
@@ -28,7 +29,7 @@ namespace Frikollection_Api.Controllers
             try
             {
                 var user = await _userService.RegisterAsync(dto);
-                return CreatedAtAction(nameof(GetById), new { id = user.UserId }, user);
+                return Ok(new { message = "Usuari creat correctament", userId = user.UserId });
             }
             catch (InvalidOperationException ex)
             {
@@ -36,15 +37,34 @@ namespace Frikollection_Api.Controllers
             }
         }
 
+        // POST: api/users/login
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        {
+            var user = await _userService.LoginAsync(dto);
+            if (user == null)
+                return Unauthorized(new { message = "Credencials incorrectes." });
+
+            return Ok(new
+            {
+                user.UserId,
+                user.Username,
+                user.Nickname,
+                user.Avatar,
+                message = "Login correcte"
+            });
+        }
+
+
         // GET: api/users/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetById(Guid id)
+        public async Task<IActionResult> GetById(Guid id)
         {
-            var user = await _userService.GetByIdAsync(id);
-            if (user == null)
-                return NotFound();
+            var userDto = await _userService.GetByIdAsync(id);
+            if (userDto == null)
+                return NotFound(new { message = "Usuari no trobat." });
 
-            return Ok(user);
+            return Ok(userDto);
         }
 
         // PUT: api/users/{id}
@@ -109,6 +129,18 @@ namespace Frikollection_Api.Controllers
 
             if (!collections.Any())
                 return NotFound(new { message = "Aquest usuari no té col·leccions públiques." });
+
+            return Ok(collections);
+        }
+
+        // GET: api/users/{id}/collections/followed
+        [HttpGet("{id}/collections/followed")]
+        public async Task<ActionResult<IEnumerable<UserCollectionDto>>> GetFollowedCollections(Guid id)
+        {
+            var collections = await _collectionService.GetFollowedCollectionsAsync(id);
+
+            if (!collections.Any())
+                return NotFound(new { message = "Aquest usuari no segueix cap col·lecció." });
 
             return Ok(collections);
         }

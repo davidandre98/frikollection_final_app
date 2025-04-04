@@ -109,5 +109,46 @@ namespace Frikollection_Api.Controllers
 
             return Ok(new { message = "Has deixat de seguir la col·lecció." });
         }
+
+        // POST: api/collections/{id}/products
+        [HttpPost("{id}/products")]
+        public async Task<IActionResult> AddProductToCollection(Guid id, [FromBody] AddProductToCollectionDto dto)
+        {
+            if (id != dto.CollectionId)
+                return BadRequest(new { message = "El collectionId del cos no coincideix amb el de la ruta." });
+
+            var result = await _collectionService.AddProductToCollectionAsync(dto);
+            if (!result)
+                return Conflict(new { message = "Aquest producte ja forma part de la col·lecció." });
+
+            return Ok(new { message = "Producte afegit correctament a la col·lecció." });
+        }
+
+        // DELETE: api/collections/{id}/products/{productId}
+        [HttpDelete("{id}/products/{productId}")]
+        public async Task<IActionResult> RemoveProductFromCollection(Guid id, Guid productId)
+        {
+            var result = await _collectionService.RemoveProductFromCollectionAsync(id, productId);
+            if (!result)
+                return NotFound(new { message = "El producte no existeix dins d’aquesta col·lecció." });
+
+            return Ok(new { message = "Producte eliminat de la col·lecció." });
+        }
+
+        // GET: api/collections/{id}/products
+        [HttpGet("{id}/products")]
+        public async Task<IActionResult> GetProductsInCollection(Guid id)
+        {
+            var products = await _collectionService.GetProductsInCollectionAsync(id);
+            return Ok(products);
+        }
+
+        // GET: api/collections/{id}/stats
+        [HttpGet("{id}/stats")]
+        public async Task<IActionResult> GetCollectionStats(Guid id)
+        {
+            var stats = await _collectionService.GetCollectionStatsAsync(id);
+            return Ok(stats);
+        }
     }
 }
