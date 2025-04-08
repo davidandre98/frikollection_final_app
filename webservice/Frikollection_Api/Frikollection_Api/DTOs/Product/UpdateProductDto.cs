@@ -12,7 +12,6 @@ namespace Frikollection_Api.DTOs.Product
         public string Name { get; set; } = null!;
 
         public string? License { get; set; }
-        public string? Exclusive { get; set; }
         public string? Status { get; set; }
         public string? Type { get; set; }
         public string? Subtype { get; set; }

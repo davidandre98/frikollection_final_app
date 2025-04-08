@@ -87,7 +87,6 @@ CREATE TABLE Product (
     status NVARCHAR(50),
     item_number NVARCHAR(50),
     license NVARCHAR(100),
-	exclusive NVARCHAR(100),
     width FLOAT,
     height FLOAT,
     value DECIMAL(10,2),

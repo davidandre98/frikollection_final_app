@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Frikollection_Api.DTOs.User;
+using Frikollection_Api.Infraestructure;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,13 +11,16 @@ namespace Frikollection_Api.Controllers
     public class UploadsController : ControllerBase
     {
         private readonly IWebHostEnvironment _env;
+        private readonly FrikollectionContext _context;
 
-        public UploadsController(IWebHostEnvironment env)
+        public UploadsController(IWebHostEnvironment env, FrikollectionContext context)
         {
             _env = env;
+            _context = context;
         }
 
         // Qualsevol imatge excepte l'avatar de l'usuari
+        // POST: api/uploads/images/{productType}/{fileName}
         [HttpPost("{productType}")]
         public async Task<IActionResult> UploadImage([FromRoute] string productType, IFormFile file)
         {
@@ -49,11 +54,13 @@ namespace Frikollection_Api.Controllers
             return Ok(new { url = imageUrl });
         }
 
-        /*
         // Per a gestionar els avatars
+        // POST: api/uploads/images/avatar/{userId}
         [HttpPost("avatar/{userId}")]
-        public async Task<IActionResult> UploadAvatar([FromRoute] Guid userId, [FromForm] IFormFile file)
+        public async Task<IActionResult> UploadAvatar([FromRoute] Guid userId, [FromForm] UploadAvatarDto dto)
         {
+            var file = dto.File;
+
             if (file == null || file.Length == 0)
                 return BadRequest(new { message = "No s'ha proporcionat cap fitxer." });
 
@@ -69,7 +76,6 @@ namespace Frikollection_Api.Controllers
             var fileName = $"{userId}{fileExtension}";
             var filePath = Path.Combine(avatarFolder, fileName);
 
-            // 🧹 Esborrar imatge antiga si no és la per defecte
             if (!string.IsNullOrEmpty(user.Avatar) &&
                 !user.Avatar.EndsWith("default.jpg", StringComparison.OrdinalIgnoreCase))
             {
@@ -88,6 +94,55 @@ namespace Frikollection_Api.Controllers
 
             return Ok(new { url = avatarUrl });
         }
-        */
+
+        // Agafar totes les imatges
+        // GET: api/uploads/images
+        [HttpGet("images")]
+        public IActionResult GetAllProductImages()
+        {
+            var basePath = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads");
+            var allowedTypes = new[] { "avatar", "figure", "funko", "tag", "tcg" };
+
+            var imageUrls = new List<object>();
+
+            foreach (var type in allowedTypes)
+            {
+                var typeFolder = Path.Combine(basePath, type);
+                if (!Directory.Exists(typeFolder))
+                    continue;
+
+                var images = Directory.GetFiles(typeFolder)
+                    .Select(file => $"{Request.Scheme}://{Request.Host}/images/uploads/{type}/{Path.GetFileName(file)}")
+                    .ToList();
+
+                imageUrls.Add(new
+                {
+                    Type = type,
+                    Images = images
+                });
+            }
+
+            return Ok(imageUrls);
+        }
+
+        // Agafar les imatges d'un productType en concret
+        // GET: api/uploads/images/{productType}
+        [HttpGet("images/{productType}")]
+        public IActionResult GetProductImagesByType(string productType)
+        {
+            var allowedTypes = new[] { "avatar", "figure", "funko", "tag", "tcg" };
+            if (!allowedTypes.Contains(productType.ToLower()))
+                return BadRequest(new { message = $"Tipus d'imatge no vàlid. Usa: {string.Join(", ", allowedTypes)}" });
+
+            var typeFolder = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads", productType);
+            if (!Directory.Exists(typeFolder))
+                return NotFound(new { message = $"No s'ha trobat la carpeta per al tipus '{productType}'." });
+
+            var imageUrls = Directory.GetFiles(typeFolder)
+                .Select(file => $"{Request.Scheme}://{Request.Host}/images/uploads/{productType}/{Path.GetFileName(file)}")
+                .ToList();
+
+            return Ok(imageUrls);
+        }
     }
 }

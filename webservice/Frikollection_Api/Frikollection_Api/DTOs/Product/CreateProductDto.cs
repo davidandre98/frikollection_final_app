@@ -11,9 +11,6 @@ namespace Frikollection_Api.DTOs.Product
         [StringLength(100)]
         public string? License { get; set; }
 
-        [StringLength(100)]
-        public string? Exclusive { get; set; }
-
         [StringLength(50)]
         public string? Status { get; set; }
 

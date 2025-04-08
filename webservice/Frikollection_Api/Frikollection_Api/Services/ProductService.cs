@@ -21,7 +21,6 @@ namespace Frikollection_Api.Services
                 ProductId = Guid.NewGuid(),
                 Name = dto.Name,
                 License = dto.License,
-                Exclusive = dto.Exclusive,
                 Status = dto.Status,
                 Type = dto.Type,
                 Subtype = dto.Subtype,
@@ -84,7 +83,6 @@ namespace Frikollection_Api.Services
 
             product.Name = dto.Name;
             product.License = dto.License;
-            product.Exclusive = dto.Exclusive;
             product.Status = dto.Status;
             product.Type = dto.Type;
             product.Subtype = dto.Subtype;
