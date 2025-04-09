@@ -74,7 +74,13 @@ CREATE TABLE Product_Type (
 CREATE TABLE Product_Extension (
     product_extension_id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     package NVARCHAR(100),
-    expansion NVARCHAR(100)
+    expansion NVARCHAR(100),
+	hp INT,
+    pokemon_types NVARCHAR(100),
+    evolves_from NVARCHAR(100),
+    abilities NVARCHAR(MAX),
+    attacks NVARCHAR(MAX),
+    converted_retreat_cost INT
 );
 
 -- Productes

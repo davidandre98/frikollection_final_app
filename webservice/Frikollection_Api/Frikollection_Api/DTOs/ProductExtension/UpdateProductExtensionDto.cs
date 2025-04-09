@@ -7,12 +7,20 @@ namespace Frikollection_Api.DTOs.ProductExtension
         [Required]
         public Guid ProductExtensionId { get; set; }
 
-        [Required]
-        [StringLength(100)]
-        public string Expansion { get; set; } = null!;
+        public int? Hp { get; set; }
 
-        [Required]
-        [StringLength(100)]
+        public List<string>? PokemonTypes { get; set; }
+
+        public string? EvolvesFrom { get; set; }
+
+        public List<AbilityDto>? Abilities { get; set; }
+
+        public List<AttackDto>? Attacks { get; set; }
+
+        public int? ConvertedRetreatCost { get; set; }
+
         public string Package { get; set; } = null!;
+
+        public string Expansion { get; set; } = null!;
     }
 }

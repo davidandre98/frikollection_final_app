@@ -2,6 +2,7 @@
 using Frikollection_Api.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace Frikollection_Api.Controllers
 {
@@ -25,6 +26,39 @@ namespace Frikollection_Api.Controllers
 
             var created = await _service.CreateAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = created.ProductExtensionId }, created);
+        }
+
+        // POST: api/productextensions/from-json
+        [HttpPost("from-json")]
+        public async Task<IActionResult> CreateFromJson([FromBody] CreateProductExtensionDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var mappedDto = _service.MapFromJson(dto);
+            var created = await _service.CreateAsync(mappedDto);
+            if (created == null)
+                return NotFound(new { message = "No s'ha trobat cap producte amb aquest nom." });
+
+            var abilities = string.IsNullOrEmpty(created.Abilities)
+                ? null
+                : JsonSerializer.Deserialize<List<AbilityDto>>(created.Abilities);
+
+            var attacks = string.IsNullOrEmpty(created.Attacks)
+                ? null
+                : JsonSerializer.Deserialize<List<AttackDto>>(created.Attacks);
+
+            return Ok(new
+            {
+                created.Hp,
+                created.PokemonTypes,
+                created.EvolvesFrom,
+                Abilities = abilities,
+                Attacks = attacks,
+                created.ConvertedRetreatCost,
+                created.Package,
+                created.Expansion
+            });
         }
 
         // GET: api/productextensions
@@ -53,8 +87,8 @@ namespace Frikollection_Api.Controllers
             if (id != dto.ProductExtensionId)
                 return BadRequest(new { message = "L'ID no coincideix amb el cos de la petició." });
 
-            var updated = await _service.UpdateAsync(dto);
-            if (!updated)
+            var updated = await _service.UpdateAsync(id, dto);
+            if (updated == null)
                 return NotFound(new { message = "Extensió no trobada." });
 
             return Ok(new { message = "Extensió actualitzada correctament." });

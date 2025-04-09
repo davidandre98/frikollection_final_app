@@ -35,8 +35,6 @@ public partial class Product
 
     public Guid? ProductExtensionId { get; set; }
 
-    public string? Exclusive { get; set; }
-
     public virtual ICollection<CollectionProduct> CollectionProducts { get; set; } = new List<CollectionProduct>();
 
     public virtual ProductExtension? ProductExtension { get; set; }

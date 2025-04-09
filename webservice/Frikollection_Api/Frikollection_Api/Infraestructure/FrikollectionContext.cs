@@ -128,9 +128,6 @@ public partial class FrikollectionContext : DbContext
                 .HasDefaultValueSql("(newid())")
                 .HasColumnName("product_id");
             entity.Property(e => e.BigPicture).HasColumnName("big_picture");
-            entity.Property(e => e.Exclusive)
-                .HasMaxLength(100)
-                .HasColumnName("exclusive");
             entity.Property(e => e.Height).HasColumnName("height");
             entity.Property(e => e.ItemNumber)
                 .HasMaxLength(50)
@@ -194,12 +191,22 @@ public partial class FrikollectionContext : DbContext
             entity.Property(e => e.ProductExtensionId)
                 .HasDefaultValueSql("(newid())")
                 .HasColumnName("product_extension_id");
+            entity.Property(e => e.Abilities).HasColumnName("abilities");
+            entity.Property(e => e.Attacks).HasColumnName("attacks");
+            entity.Property(e => e.ConvertedRetreatCost).HasColumnName("converted_retreat_cost");
+            entity.Property(e => e.EvolvesFrom)
+                .HasMaxLength(100)
+                .HasColumnName("evolves_from");
             entity.Property(e => e.Expansion)
                 .HasMaxLength(100)
                 .HasColumnName("expansion");
+            entity.Property(e => e.Hp).HasColumnName("hp");
             entity.Property(e => e.Package)
                 .HasMaxLength(100)
                 .HasColumnName("package");
+            entity.Property(e => e.PokemonTypes)
+                .HasMaxLength(100)
+                .HasColumnName("pokemon_types");
         });
 
         modelBuilder.Entity<ProductType>(entity =>
