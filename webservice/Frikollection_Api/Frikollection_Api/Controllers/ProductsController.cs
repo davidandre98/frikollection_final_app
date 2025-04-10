@@ -36,15 +36,11 @@ namespace Frikollection_Api.Controllers
                 {
                     return BadRequest(new { message = "Extensió no vàlida." });
                 }
-
-                if (string.IsNullOrWhiteSpace(extension.Expansion) || string.IsNullOrWhiteSpace(extension.Package))
-                {
-                    return BadRequest(new { message = "L'extensió ha de tenir informats tant el camp 'expansion' com 'package'." });
-                }
             }
 
             var product = await _productService.CreateProductAsync(dto);
-            return CreatedAtAction(nameof(CreateProduct), new { id = product.ProductId }, product);
+            var dtoResult = _productService.ToDto(product);
+            return Ok(dtoResult);
         }
 
         // GET: api/products/{id}
@@ -55,7 +51,8 @@ namespace Frikollection_Api.Controllers
             if (product == null)
                 return NotFound(new { message = "Producte no trobat." });
 
-            return Ok(product);
+            var dto = _productService.ToDto(product);
+            return Ok(dto);
         }
 
         // GET: api/products
@@ -63,7 +60,8 @@ namespace Frikollection_Api.Controllers
         public async Task<IActionResult> GetAllProducts()
         {
             var products = await _productService.GetAllAsync();
-            return Ok(products);
+            var dtoResult = products.Select(_productService.ToDto);
+            return Ok(dtoResult);
         }
 
         // PUT: api/products/{id}

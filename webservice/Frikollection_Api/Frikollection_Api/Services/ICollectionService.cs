@@ -19,5 +19,6 @@ namespace Frikollection_Api.Services
         Task<bool> RemoveProductFromCollectionAsync(Guid collectionId, Guid productId);
         Task<IEnumerable<Product>> GetProductsInCollectionAsync(Guid collectionId);
         Task<CollectionStatsDto> GetCollectionStatsAsync(Guid collectionId);
+        CollectionPreviewDto ToDto(Collection collection);
     }
 }

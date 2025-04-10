@@ -1,7 +1,10 @@
 ﻿using Frikollection_Api.DTOs.Product;
+using Frikollection_Api.DTOs.ProductExtension;
+using Frikollection_Api.DTOs.ProductType;
 using Frikollection_Api.Infraestructure;
 using Frikollection_Api.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace Frikollection_Api.Services
 {
@@ -16,13 +19,22 @@ namespace Frikollection_Api.Services
 
         public async Task<Product> CreateProductAsync(CreateProductDto dto)
         {
+            if (dto.ProductExtensionId != null && dto.ProductTypeId != null)
+            {
+                var type = await _context.ProductTypes.FindAsync(dto.ProductTypeId);
+                if (type != null && type.HasExtension == false)
+                {
+                    throw new InvalidOperationException("Aquest tipus de producte no admet extensió.");
+                }
+            }
+
             var product = new Product
             {
                 ProductId = Guid.NewGuid(),
                 Name = dto.Name,
                 License = dto.License,
                 Status = dto.Status,
-                Type = dto.Type,
+                Supertype = dto.Supertype,
                 Subtype = dto.Subtype,
                 ItemNumber = dto.ItemNumber,
                 Value = dto.Value,
@@ -81,10 +93,26 @@ namespace Frikollection_Api.Services
             if (product == null)
                 return false;
 
+            bool hasExtension = product.ProductExtensionId != null || dto.ProductExtensionId != null;
+            bool hasProductType = product.ProductType != null || dto.ProductTypeId != null;
+            if (hasExtension && hasProductType)
+            {
+                var type = product.ProductType;
+                if (dto.ProductTypeId != null && (type == null || dto.ProductTypeId != type.ProductTypeId))
+                {
+                    type = await _context.ProductTypes.FindAsync(dto.ProductTypeId);
+                }
+
+                if (type != null && !type.HasExtension.GetValueOrDefault())
+                {
+                    throw new InvalidOperationException("Aquest tipus de producte no admet extensió.");
+                }
+            }
+
             product.Name = dto.Name;
             product.License = dto.License;
             product.Status = dto.Status;
-            product.Type = dto.Type;
+            product.Supertype = dto.Supertype;
             product.Subtype = dto.Subtype;
             product.ItemNumber = dto.ItemNumber;
             product.Value = dto.Value;
@@ -134,6 +162,49 @@ namespace Frikollection_Api.Services
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public ProductDto ToDto(Product product)
+        {
+            return new ProductDto
+            {
+                Name = product.Name,
+                Supertype = product.Supertype,
+                Subtype = product.Subtype,
+                Release = product.Release,
+                Status = product.Status,
+                ItemNumber = product.ItemNumber,
+                License = product.License,
+                Width = product.Width,
+                Height = product.Height,
+                Value = product.Value,
+                SmallPicture = product.SmallPicture,
+                BigPicture = product.BigPicture,
+                ProductType = product.ProductType != null
+                    ? new ProductTypeDto
+                    {
+                        TypeName = product.ProductType.TypeName,
+                        HasExtension = product.ProductType.HasExtension
+                    }
+                    : null,
+                ProductExtension = product.ProductExtension != null
+                    ? new ProductExtensionDto
+                    {
+                        Hp = product.ProductExtension.Hp,
+                        PokemonTypes = product.ProductExtension.PokemonTypes,
+                        EvolvesFrom = product.ProductExtension.EvolvesFrom,
+                        Abilities = string.IsNullOrEmpty(product.ProductExtension.Abilities)
+                            ? null
+                            : JsonSerializer.Deserialize<List<AbilityDto>>(product.ProductExtension.Abilities),
+                        Attacks = string.IsNullOrEmpty(product.ProductExtension.Attacks)
+                            ? null
+                            : JsonSerializer.Deserialize<List<AttackDto>>(product.ProductExtension.Attacks),
+                        ConvertedRetreatCost = product.ProductExtension.ConvertedRetreatCost,
+                        Package = product.ProductExtension.Package,
+                        Expansion = product.ProductExtension.Expansion
+                    }
+                    : null
+            };
         }
     }
 }

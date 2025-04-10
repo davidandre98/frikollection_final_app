@@ -10,6 +10,6 @@ namespace Frikollection_Api.Services
         Task<ProductExtension?> GetByIdAsync(Guid id);
         Task<ProductExtension?> UpdateAsync(Guid id, UpdateProductExtensionDto dto);
         Task<bool> DeleteAsync(Guid id);
-        CreateProductExtensionDto MapFromJson(CreateProductExtensionDto dto);
+        ProductExtensionDto ToDto(ProductExtension extension);
     }
 }

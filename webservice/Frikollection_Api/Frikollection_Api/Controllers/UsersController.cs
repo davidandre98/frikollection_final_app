@@ -85,8 +85,8 @@ namespace Frikollection_Api.Controllers
             }
         }
 
-        // GET: api/users/{id}/public
-        [HttpGet("{id}/public")]
+        // GET: api/users/{id}/public-profile
+        [HttpGet("{id}/public-profile")]
         public async Task<ActionResult<PublicUserDto>> GetPublicProfile(Guid id)
         {
             var user = await _userService.GetPublicProfileAsync(id);
@@ -96,8 +96,8 @@ namespace Frikollection_Api.Controllers
             return Ok(user);
         }
 
-        // GET: api/users/{id}/profile
-        [HttpGet("{id}/profile")]
+        // GET: api/users/{id}/private-profile
+        [HttpGet("{id}/private-profile")]
         public async Task<ActionResult<UserProfileDto>> GetOwnProfile(Guid id)
         {
             var user = await _userService.GetUserProfileAsync(id);

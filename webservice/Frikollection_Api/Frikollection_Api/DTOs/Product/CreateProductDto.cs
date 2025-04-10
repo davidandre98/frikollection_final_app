@@ -15,13 +15,13 @@ namespace Frikollection_Api.DTOs.Product
         public string? Status { get; set; }
 
         [StringLength(100)]
-        public string? Type { get; set; }
+        public string? Supertype { get; set; }
 
         [StringLength(100)]
         public string? Subtype { get; set; }
 
         [StringLength(50)]
-        public string? ItemNumber { get; set; }
+        public int? ItemNumber { get; set; }
 
         public decimal? Value { get; set; }
         public double? Width { get; set; }

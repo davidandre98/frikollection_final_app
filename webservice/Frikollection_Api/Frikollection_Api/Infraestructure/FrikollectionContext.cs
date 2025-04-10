@@ -129,9 +129,7 @@ public partial class FrikollectionContext : DbContext
                 .HasColumnName("product_id");
             entity.Property(e => e.BigPicture).HasColumnName("big_picture");
             entity.Property(e => e.Height).HasColumnName("height");
-            entity.Property(e => e.ItemNumber)
-                .HasMaxLength(50)
-                .HasColumnName("item_number");
+            entity.Property(e => e.ItemNumber).HasColumnName("item_number");
             entity.Property(e => e.License)
                 .HasMaxLength(100)
                 .HasColumnName("license");
@@ -148,9 +146,9 @@ public partial class FrikollectionContext : DbContext
             entity.Property(e => e.Subtype)
                 .HasMaxLength(100)
                 .HasColumnName("subtype");
-            entity.Property(e => e.Type)
+            entity.Property(e => e.Supertype)
                 .HasMaxLength(100)
-                .HasColumnName("type");
+                .HasColumnName("supertype");
             entity.Property(e => e.Value)
                 .HasColumnType("decimal(10, 2)")
                 .HasColumnName("value");

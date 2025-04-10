@@ -40,21 +40,23 @@ namespace Frikollection_Api.Controllers
 
         // GET: api/collections
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Collection>>> GetAll()
+        public async Task<ActionResult<IEnumerable<CollectionPreviewDto>>> GetAll()
         {
             var collections = await _collectionService.GetAllCollectionsAsync();
-            return Ok(collections);
+            var dtoResult = collections.Select(_collectionService.ToDto);
+            return Ok(dtoResult);
         }
 
         // GET: api/collections/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<Collection>> GetById(Guid id)
+        public async Task<ActionResult<CollectionPreviewDto>> GetById(Guid id)
         {
             var collection = await _collectionService.GetCollectionByIdAsync(id);
             if (collection == null)
                 return NotFound(new { message = "Col·lecció no trobada." });
 
-            return Ok(collection);
+            var dto = _collectionService.ToDto(collection);
+            return Ok(dto);
         }
 
         // DELETE: api/collections/{id}

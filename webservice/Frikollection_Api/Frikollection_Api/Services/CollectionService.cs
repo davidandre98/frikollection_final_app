@@ -1,4 +1,6 @@
 ﻿using Frikollection_Api.DTOs.Collection;
+using Frikollection_Api.DTOs.Product;
+using Frikollection_Api.DTOs.User;
 using Frikollection_Api.Infraestructure;
 using Frikollection_Api.Models;
 using Microsoft.EntityFrameworkCore;
@@ -8,10 +10,12 @@ namespace Frikollection_Api.Services
     public class CollectionService : ICollectionService
     {
         private readonly FrikollectionContext _context;
+        private readonly IProductService _productService;
 
-        public CollectionService(FrikollectionContext context)
+        public CollectionService(FrikollectionContext context, IProductService productService)
         {
             _context = context;
+            _productService = productService;
         }
 
         public async Task<Collection> CreateCollectionAsync(CreateCollectionDto dto)
@@ -38,12 +42,34 @@ namespace Frikollection_Api.Services
 
         public async Task<IEnumerable<Collection>> GetAllCollectionsAsync()
         {
-            return await _context.Collections.ToListAsync();
+            return await _context.Collections
+                .Include(c => c.User)
+                .Include(c => c.CollectionProducts)
+                    .ThenInclude(cp => cp.Product)
+                        .ThenInclude(p => p.ProductType)
+                .Include(c => c.CollectionProducts)
+                    .ThenInclude(cp => cp.Product)
+                        .ThenInclude(p => p.ProductExtension)
+                .Include(c => c.CollectionProducts)
+                    .ThenInclude(cp => cp.Product)
+                        .ThenInclude(p => p.Tags)
+                .ToListAsync();
         }
 
         public async Task<Collection?> GetCollectionByIdAsync(Guid id)
         {
-            return await _context.Collections.FindAsync(id);
+            return await _context.Collections
+                .Include(c => c.User)
+                .Include(c => c.CollectionProducts)
+                    .ThenInclude(cp => cp.Product)
+                        .ThenInclude(p => p.ProductType)
+                .Include(c => c.CollectionProducts)
+                    .ThenInclude(cp => cp.Product)
+                        .ThenInclude(p => p.ProductExtension)
+                .Include(c => c.CollectionProducts)
+                    .ThenInclude(cp => cp.Product)
+                        .ThenInclude(p => p.Tags)
+                .FirstOrDefaultAsync(c => c.CollectionId == id);
         }
 
         public async Task<bool> DeleteCollectionAsync(Guid id)
@@ -276,6 +302,26 @@ namespace Frikollection_Api.Services
             };
 
             return stats;
+        }
+
+        public CollectionPreviewDto ToDto(Collection collection)
+        {
+            return new CollectionPreviewDto
+            {
+                Name = collection.Name,
+                Private = collection.Private,
+                CreationDate = collection.CreationDate,
+                User = collection.User != null
+                    ? new UserPreviewDto
+                    {
+                        Username = collection.User.Username
+                    }
+                    : null,
+                Products = collection.CollectionProducts
+                    .Where(cp => cp.Product != null)
+                    .Select(cp => _productService.ToDto(cp.Product))
+                    .ToList()
+            };
         }
     }
 }

@@ -5,7 +5,6 @@ namespace Frikollection_Api.DTOs.User
 {
     public class UserDto
     {
-        public Guid UserId { get; set; }
         public string Username { get; set; }
         public string Avatar { get; set; }
         public string Nickname { get; set; }
@@ -20,6 +19,5 @@ namespace Frikollection_Api.DTOs.User
         public ICollection<CollectionDto> OwnCollections { get; set; } = new List<CollectionDto>();
         public ICollection<FollowedCollectionDto> FollowedCollections { get; set; } = new List<FollowedCollectionDto>();
         public ICollection<NotificationDto> Notifications { get; set; } = new List<NotificationDto>();
-
     }
 }

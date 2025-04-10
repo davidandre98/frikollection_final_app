@@ -13,9 +13,9 @@ namespace Frikollection_Api.DTOs.Product
 
         public string? License { get; set; }
         public string? Status { get; set; }
-        public string? Type { get; set; }
+        public string? Supertype { get; set; }
         public string? Subtype { get; set; }
-        public string? ItemNumber { get; set; }
+        public int? ItemNumber { get; set; }
         public decimal? Value { get; set; }
         public double? Width { get; set; }
         public double? Height { get; set; }

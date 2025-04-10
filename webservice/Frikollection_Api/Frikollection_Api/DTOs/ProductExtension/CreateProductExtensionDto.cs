@@ -7,9 +7,13 @@ namespace Frikollection_Api.DTOs.ProductExtension
         [Required]
         public string Name { get; set; } // Per vincular-lo al 'name' de Product
 
+        public string Supertype { get; set; }
+
+        public string Rarity { get; set; }
+
         public int? Hp { get; set; }
 
-        public List<string>? PokemonTypes { get; set; }
+        public List<string>? Types { get; set; }
 
         public string? EvolvesFrom { get; set; }
 
@@ -20,6 +24,8 @@ namespace Frikollection_Api.DTOs.ProductExtension
         public int? ConvertedRetreatCost { get; set; }
 
         public SetDto? Set { get; set; }
+
+        public List<int>? NationalPokedexNumbers { get; set; }
 
         public CardmarketDto? Cardmarket { get; set; }
 

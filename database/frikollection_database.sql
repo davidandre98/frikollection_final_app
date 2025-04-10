@@ -91,7 +91,7 @@ CREATE TABLE Product (
     subtype NVARCHAR(100),
     release DATE,
     status NVARCHAR(50),
-    item_number NVARCHAR(50),
+    item_number INT,
     license NVARCHAR(100),
     width FLOAT,
     height FLOAT,

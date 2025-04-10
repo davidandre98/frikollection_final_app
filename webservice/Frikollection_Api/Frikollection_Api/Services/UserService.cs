@@ -68,7 +68,6 @@ namespace Frikollection_Api.Services
 
             return new UserDto
             {
-                UserId = user.UserId,
                 Username = user.Username,
                 Avatar = user.Avatar,
                 Nickname = user.Nickname,

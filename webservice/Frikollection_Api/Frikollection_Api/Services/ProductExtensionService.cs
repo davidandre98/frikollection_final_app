@@ -2,6 +2,8 @@
 using Frikollection_Api.Infraestructure;
 using Frikollection_Api.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text.Json;
 
 namespace Frikollection_Api.Services
 {
@@ -23,10 +25,10 @@ namespace Frikollection_Api.Services
             {
                 ProductExtensionId = Guid.NewGuid(),
                 Hp = dto.Hp,
-                PokemonTypes = dto.PokemonTypes != null ? string.Join(",", dto.PokemonTypes) : null,
+                PokemonTypes = dto.Types != null ? string.Join(",", dto.Types) : null,
                 EvolvesFrom = dto.EvolvesFrom,
-                Abilities = dto.Abilities != null ? System.Text.Json.JsonSerializer.Serialize(dto.Abilities) : null,
-                Attacks = dto.Attacks != null ? System.Text.Json.JsonSerializer.Serialize(dto.Attacks) : null,
+                Abilities = dto.Abilities != null ? JsonSerializer.Serialize(dto.Abilities) : null,
+                Attacks = dto.Attacks != null ? JsonSerializer.Serialize(dto.Attacks) : null,
                 ConvertedRetreatCost = dto.ConvertedRetreatCost,
                 Package = dto.Set?.Name,
                 Expansion = dto.Set?.Series
@@ -35,9 +37,21 @@ namespace Frikollection_Api.Services
             // Assignar ProductExtensionId a Product
             product.ProductExtensionId = extension.ProductExtensionId;
 
+            // Assignar Supertype a Product
+            if (!dto.Supertype.IsNullOrEmpty())
+                product.Supertype = dto.Supertype;
+
+            // Assignar Subtype a Product
+            if (!dto.Rarity.IsNullOrEmpty())
+                product.Subtype = dto.Rarity;
+
             // Assignar Release a Product
             if (DateOnly.TryParse(dto.Set?.ReleaseDate, out var releaseDate))
                 product.Release = releaseDate;
+
+            // Assignar ItemNumber a Product
+            if (dto.NationalPokedexNumbers != null && dto.NationalPokedexNumbers.Any())
+                product.ItemNumber = dto.NationalPokedexNumbers.First();
 
             // Assignar Value a Product
             product.Value = dto.Cardmarket?.Prices?.AverageSellPrice;
@@ -64,10 +78,10 @@ namespace Frikollection_Api.Services
             if (extension == null) return null;
 
             extension.Hp = dto.Hp;
-            extension.PokemonTypes = dto.PokemonTypes != null ? string.Join(",", dto.PokemonTypes) : null;
+            extension.PokemonTypes = dto.Types != null ? string.Join(",", dto.Types) : null;
             extension.EvolvesFrom = dto.EvolvesFrom;
-            extension.Abilities = dto.Abilities != null ? System.Text.Json.JsonSerializer.Serialize(dto.Abilities) : null;
-            extension.Attacks = dto.Attacks != null ? System.Text.Json.JsonSerializer.Serialize(dto.Attacks) : null;
+            extension.Abilities = dto.Abilities != null ? JsonSerializer.Serialize(dto.Abilities) : null;
+            extension.Attacks = dto.Attacks != null ? JsonSerializer.Serialize(dto.Attacks) : null;
             extension.ConvertedRetreatCost = dto.ConvertedRetreatCost;
             extension.Package = dto.Package;
             extension.Expansion = dto.Expansion;
@@ -90,30 +104,22 @@ namespace Frikollection_Api.Services
             return true;
         }
 
-        public CreateProductExtensionDto MapFromJson(CreateProductExtensionDto dto)
+        public ProductExtensionDto ToDto(ProductExtension ext)
         {
-            return new CreateProductExtensionDto
+            return new ProductExtensionDto
             {
-                Name = dto.Name,
-                Hp = dto.Hp,
-                PokemonTypes = dto.PokemonTypes,
-                EvolvesFrom = dto.EvolvesFrom,
-                Abilities = dto.Abilities,
-                Attacks = dto.Attacks,
-                ConvertedRetreatCost = dto.ConvertedRetreatCost,
-                Set = dto.Set != null ? new CreateProductExtensionDto.SetDto
-                {
-                    Name = dto.Set.Name,
-                    Series = dto.Set.Series,
-                    ReleaseDate = dto.Set.ReleaseDate
-                } : null,
-                Cardmarket = dto.Cardmarket != null ? new CreateProductExtensionDto.CardmarketDto
-                {
-                    Prices = dto.Cardmarket.Prices != null ? new CreateProductExtensionDto.CardmarketDto.CardmarketPricesDto
-                    {
-                        AverageSellPrice = dto.Cardmarket.Prices.AverageSellPrice
-                    } : null
-                } : null
+                Hp = ext.Hp,
+                PokemonTypes = ext.PokemonTypes,
+                EvolvesFrom = ext.EvolvesFrom,
+                Abilities = string.IsNullOrEmpty(ext.Abilities)
+                    ? null
+                    : JsonSerializer.Deserialize<List<AbilityDto>>(ext.Abilities),
+                Attacks = string.IsNullOrEmpty(ext.Attacks)
+                    ? null
+                    : JsonSerializer.Deserialize<List<AttackDto>>(ext.Attacks),
+                ConvertedRetreatCost = ext.ConvertedRetreatCost,
+                Package = ext.Package,
+                Expansion = ext.Expansion
             };
         }
     }

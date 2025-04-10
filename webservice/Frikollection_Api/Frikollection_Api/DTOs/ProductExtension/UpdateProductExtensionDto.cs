@@ -9,7 +9,7 @@ namespace Frikollection_Api.DTOs.ProductExtension
 
         public int? Hp { get; set; }
 
-        public List<string>? PokemonTypes { get; set; }
+        public List<string>? Types { get; set; }
 
         public string? EvolvesFrom { get; set; }
 

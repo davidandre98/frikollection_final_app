@@ -17,17 +17,6 @@ namespace Frikollection_Api.Controllers
             _service = service;
         }
 
-        // POST: api/productextensions
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateProductExtensionDto dto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var created = await _service.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = created.ProductExtensionId }, created);
-        }
-
         // POST: api/productextensions/from-json
         [HttpPost("from-json")]
         public async Task<IActionResult> CreateFromJson([FromBody] CreateProductExtensionDto dto)
@@ -35,30 +24,12 @@ namespace Frikollection_Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var mappedDto = _service.MapFromJson(dto);
-            var created = await _service.CreateAsync(mappedDto);
+            var created = await _service.CreateAsync(dto);
             if (created == null)
                 return NotFound(new { message = "No s'ha trobat cap producte amb aquest nom." });
 
-            var abilities = string.IsNullOrEmpty(created.Abilities)
-                ? null
-                : JsonSerializer.Deserialize<List<AbilityDto>>(created.Abilities);
-
-            var attacks = string.IsNullOrEmpty(created.Attacks)
-                ? null
-                : JsonSerializer.Deserialize<List<AttackDto>>(created.Attacks);
-
-            return Ok(new
-            {
-                created.Hp,
-                created.PokemonTypes,
-                created.EvolvesFrom,
-                Abilities = abilities,
-                Attacks = attacks,
-                created.ConvertedRetreatCost,
-                created.Package,
-                created.Expansion
-            });
+            var dtoResult = _service.ToDto(created);
+            return Ok(dtoResult);
         }
 
         // GET: api/productextensions
@@ -66,7 +37,9 @@ namespace Frikollection_Api.Controllers
         public async Task<IActionResult> GetAll()
         {
             var extensions = await _service.GetAllAsync();
-            return Ok(extensions);
+            var dtoResult = extensions.Select(_service.ToDto);
+            return Ok(dtoResult);
+
         }
 
         // GET: api/productextensions/{id}
@@ -77,7 +50,8 @@ namespace Frikollection_Api.Controllers
             if (extension == null)
                 return NotFound(new { message = "Extensió no trobada." });
 
-            return Ok(extension);
+            var dto = _service.ToDto(extension);
+            return Ok(dto);
         }
 
         // PUT: api/productextensions/{id}

@@ -9,7 +9,7 @@ public partial class Product
 
     public string Name { get; set; } = null!;
 
-    public string? Type { get; set; }
+    public string? Supertype { get; set; }
 
     public string? Subtype { get; set; }
 
@@ -17,7 +17,7 @@ public partial class Product
 
     public string? Status { get; set; }
 
-    public string? ItemNumber { get; set; }
+    public int? ItemNumber { get; set; }
 
     public string? License { get; set; }
 
