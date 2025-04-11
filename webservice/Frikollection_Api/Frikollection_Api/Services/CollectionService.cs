@@ -242,20 +242,25 @@ namespace Frikollection_Api.Services
             return collections;
         }
 
-        public async Task<bool> AddProductToCollectionAsync(AddProductToCollectionDto dto)
+        public async Task<(List<Guid> Added, List<Guid> AlreadyExists)> AddProductToCollectionAsync(AddProductToCollectionDto dto)
         {
-            var exists = await _context.CollectionProducts
-                .AnyAsync(cp => cp.CollectionId == dto.CollectionId && cp.ProductId == dto.ProductId);
-            if (exists) return false;
+            var existingIds = await _context.CollectionProducts
+                .Where(cp => cp.CollectionId == dto.CollectionId && dto.ProductIds.Contains(cp.ProductId))
+                .Select(cp => cp.ProductId)
+                .ToListAsync();
 
-            _context.CollectionProducts.Add(new CollectionProduct
+            var newIds = dto.ProductIds.Except(existingIds).ToList();
+
+            var newEntries = newIds.Select(productId => new CollectionProduct
             {
                 CollectionId = dto.CollectionId,
-                ProductId = dto.ProductId
+                ProductId = productId
             });
 
+            _context.CollectionProducts.AddRange(newEntries);
             await _context.SaveChangesAsync();
-            return true;
+
+            return (newIds, existingIds);
         }
 
         public async Task<bool> RemoveProductFromCollectionAsync(Guid collectionId, Guid productId)

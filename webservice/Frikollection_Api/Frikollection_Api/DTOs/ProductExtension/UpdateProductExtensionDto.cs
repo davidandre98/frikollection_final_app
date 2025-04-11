@@ -19,8 +19,8 @@ namespace Frikollection_Api.DTOs.ProductExtension
 
         public int? ConvertedRetreatCost { get; set; }
 
-        public string Package { get; set; } = null!;
+        public string? Package { get; set; }
 
-        public string Expansion { get; set; } = null!;
+        public string? Expansion { get; set; }
     }
 }

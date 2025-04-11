@@ -3,6 +3,6 @@
     public class AddProductToCollectionDto
     {
         public Guid CollectionId { get; set; }
-        public Guid ProductId { get; set; }
+        public List<Guid> ProductIds { get; set; }
     }
 }

@@ -144,5 +144,42 @@ namespace Frikollection_Api.Controllers
 
             return Ok(imageUrls);
         }
+
+        // DELETE: api/uploads/delete-temp
+        [HttpDelete("delete-tcg")]
+        public IActionResult DeleteTemporaryImages([FromQuery] string productType, [FromQuery] string[] fileNames)
+        {
+            var allowedTypes = new[] { "figure", "funko", "tag", "tcg" };
+            if (!allowedTypes.Contains(productType.ToLower()))
+            {
+                return BadRequest(new { message = $"Tipus d'imatge no vàlid. Usa: {string.Join(", ", allowedTypes)}" });
+            }
+
+            var uploadFolder = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads", productType);
+            var deletedFiles = new List<string>();
+            var notFoundFiles = new List<string>();
+
+            foreach (var name in fileNames)
+            {
+                var filePath = Path.Combine(uploadFolder, name);
+
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                    deletedFiles.Add(name);
+                }
+                else
+                {
+                    notFoundFiles.Add(name);
+                }
+            }
+
+            return Ok(new
+            {
+                ProductType = productType,
+                Deleted = deletedFiles,
+                NotFound = notFoundFiles
+            });
+        }
     }
 }

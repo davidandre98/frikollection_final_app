@@ -1,4 +1,5 @@
 ﻿using Frikollection_Api.DTOs.ProductExtension;
+using Frikollection_Api.Helpers;
 using Frikollection_Api.Infraestructure;
 using Frikollection_Api.Models;
 using Microsoft.EntityFrameworkCore;
@@ -10,16 +11,23 @@ namespace Frikollection_Api.Services
     public class ProductExtensionService : IProductExtensionService
     {
         private readonly FrikollectionContext _context;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ProductExtensionService(FrikollectionContext context)
+        public ProductExtensionService(FrikollectionContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<ProductExtension?> CreateAsync(CreateProductExtensionDto dto)
         {
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.Name == dto.Name);
+            var product = await _context.Products
+                .Include(p => p.ProductType)
+                .FirstOrDefaultAsync(p => p.Name == dto.Name);
             if (product == null) return null;
+
+            if (product.ProductType == null || product.ProductType.HasExtension != true)
+                return null;
 
             var extension = new ProductExtension
             {
@@ -29,7 +37,7 @@ namespace Frikollection_Api.Services
                 EvolvesFrom = dto.EvolvesFrom,
                 Abilities = dto.Abilities != null ? JsonSerializer.Serialize(dto.Abilities) : null,
                 Attacks = dto.Attacks != null ? JsonSerializer.Serialize(dto.Attacks) : null,
-                ConvertedRetreatCost = dto.ConvertedRetreatCost,
+                ConvertedRetreatCost = dto.ConvertedRetreatCost ?? 0,
                 Package = dto.Set?.Name,
                 Expansion = dto.Set?.Series
             };
@@ -56,6 +64,24 @@ namespace Frikollection_Api.Services
             // Assignar Value a Product
             product.Value = dto.Cardmarket?.Prices?.AverageSellPrice;
 
+            // Desar imatges al servidor i assignar el path absolut
+            if (dto.Images != null)
+            {
+                var request = _httpContextAccessor.HttpContext?.Request;
+                var host = request != null ? $"{request.Scheme}://{request.Host}" : "";
+
+                var baseImageName = $"{dto.Name}_{dto.Set?.Name}_{dto.Set?.Series}";
+
+                var smallPath = await ImageHelper.DownloadAndSaveImageAsync(dto.Images.Small, baseImageName);
+                var largePath = await ImageHelper.DownloadAndSaveImageAsync(dto.Images.Large, baseImageName + "_large");
+
+                if (smallPath != null)
+                    product.SmallPicture = host + smallPath;
+
+                if (largePath != null)
+                    product.BigPicture = host + largePath;
+            }
+
             _context.ProductExtensions.Add(extension);
             await _context.SaveChangesAsync();
 
@@ -77,14 +103,29 @@ namespace Frikollection_Api.Services
             var extension = await _context.ProductExtensions.FindAsync(id);
             if (extension == null) return null;
 
-            extension.Hp = dto.Hp;
-            extension.PokemonTypes = dto.Types != null ? string.Join(",", dto.Types) : null;
-            extension.EvolvesFrom = dto.EvolvesFrom;
-            extension.Abilities = dto.Abilities != null ? JsonSerializer.Serialize(dto.Abilities) : null;
-            extension.Attacks = dto.Attacks != null ? JsonSerializer.Serialize(dto.Attacks) : null;
-            extension.ConvertedRetreatCost = dto.ConvertedRetreatCost;
-            extension.Package = dto.Package;
-            extension.Expansion = dto.Expansion;
+            if (dto.Hp.HasValue)
+                extension.Hp = dto.Hp;
+
+            if (dto.Types != null)
+                extension.PokemonTypes = string.Join(",", dto.Types);
+
+            if (dto.EvolvesFrom != null)
+                extension.EvolvesFrom = dto.EvolvesFrom;
+
+            if (dto.Abilities != null)
+                extension.Abilities = JsonSerializer.Serialize(dto.Abilities);
+
+            if (dto.Attacks != null)
+                extension.Attacks = JsonSerializer.Serialize(dto.Attacks);
+
+            if (dto.ConvertedRetreatCost.HasValue)
+                extension.ConvertedRetreatCost = dto.ConvertedRetreatCost;
+
+            if (dto.Package != null)
+                extension.Package = dto.Package;
+
+            if (dto.Expansion != null)
+                extension.Expansion = dto.Expansion;
 
             await _context.SaveChangesAsync();
             return extension;

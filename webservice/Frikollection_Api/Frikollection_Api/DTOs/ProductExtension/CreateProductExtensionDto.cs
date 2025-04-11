@@ -29,6 +29,8 @@ namespace Frikollection_Api.DTOs.ProductExtension
 
         public CardmarketDto? Cardmarket { get; set; }
 
+        public ImagesDto? Images { get; set; }
+
         public class SetDto
         {
             public string Name { get; set; }
@@ -44,6 +46,12 @@ namespace Frikollection_Api.DTOs.ProductExtension
             {
                 public decimal? AverageSellPrice { get; set; }
             }
+        }
+
+        public class ImagesDto
+        {
+            public string? Small { get; set; }
+            public string? Large { get; set; }
         }
     }
 }

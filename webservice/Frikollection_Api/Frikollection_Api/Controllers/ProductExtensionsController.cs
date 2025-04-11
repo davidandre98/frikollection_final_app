@@ -26,11 +26,62 @@ namespace Frikollection_Api.Controllers
 
             var created = await _service.CreateAsync(dto);
             if (created == null)
-                return NotFound(new { message = "No s'ha trobat cap producte amb aquest nom." });
+                return NotFound(new { message = "No s'ha trobat cap producte amb aquest nom o el tipus de producte no permet una extensió." });
 
             var dtoResult = _service.ToDto(created);
             return Ok(dtoResult);
         }
+
+        // POST: api/productextensions/from-json-batch
+        [HttpPost("from-json-batch")]
+        public async Task<IActionResult> CreateFromJsonBatch([FromBody] List<CreateProductExtensionDto> dtos)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (dtos == null || !dtos.Any())
+                return BadRequest(new { message = "La llista de targetes està buida." });
+
+            var results = new List<object>();
+
+            foreach (var dto in dtos)
+            {
+                try
+                {
+                    var created = await _service.CreateAsync(dto);
+
+                    if (created == null)
+                    {
+                        results.Add(new
+                        {
+                            Name = dto.Name,
+                            Status = "Error: No s'ha trobat cap producte amb aquest nom o el tipus de producte no permet una extensió."
+                        });
+                        continue;
+                    }
+
+                    var dtoResult = _service.ToDto(created);
+
+                    results.Add(new
+                    {
+                        Name = dto.Name,
+                        Status = "Creat correctament",
+                        Data = dtoResult
+                    });
+                }
+                catch (Exception ex)
+                {
+                    results.Add(new
+                    {
+                        Name = dto.Name,
+                        Status = $"Error intern: {ex.Message}"
+                    });
+                }
+            }
+
+            return Ok(results);
+        }
+
 
         // GET: api/productextensions
         [HttpGet]

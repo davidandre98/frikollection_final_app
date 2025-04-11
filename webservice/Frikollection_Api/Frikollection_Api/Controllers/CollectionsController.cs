@@ -24,7 +24,8 @@ namespace Frikollection_Api.Controllers
             try
             {
                 var created = await _collectionService.CreateCollectionAsync(dto);
-                return CreatedAtAction(nameof(GetById), new { id = created.CollectionId }, created);
+                var dtoResult = _collectionService.ToDto(created);
+                return Ok(dtoResult);
             }
             catch (InvalidOperationException ex)
             {
@@ -67,7 +68,7 @@ namespace Frikollection_Api.Controllers
             if (!result)
                 return NotFound(new { message = "Col·lecció no trobada." });
 
-            return NoContent();
+            return Ok(new { message = "Col·lecció eliminada correctament." });
         }
 
         // PUT: api/collections/{id}
@@ -119,11 +120,16 @@ namespace Frikollection_Api.Controllers
             if (id != dto.CollectionId)
                 return BadRequest(new { message = "El collectionId del cos no coincideix amb el de la ruta." });
 
-            var result = await _collectionService.AddProductToCollectionAsync(dto);
-            if (!result)
-                return Conflict(new { message = "Aquest producte ja forma part de la col·lecció." });
+            if (dto.ProductIds == null || !dto.ProductIds.Any())
+                return BadRequest(new { message = "No s'ha proporcionat cap producte a afegir." });
 
-            return Ok(new { message = "Producte afegit correctament a la col·lecció." });
+            var (added, alreadyExists) = await _collectionService.AddProductToCollectionAsync(dto);
+
+            return Ok(new
+            {
+                Afegits = added,
+                JaExisteixen = alreadyExists
+            });
         }
 
         // DELETE: api/collections/{id}/products/{productId}
