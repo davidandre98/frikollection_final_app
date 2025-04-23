@@ -65,8 +65,7 @@ namespace Frikollection_Api.Controllers
                     results.Add(new
                     {
                         Name = dto.Name,
-                        Status = "Creat correctament",
-                        Data = dtoResult
+                        Estat = "Creat correctament"
                     });
                 }
                 catch (Exception ex)
@@ -74,7 +73,7 @@ namespace Frikollection_Api.Controllers
                     results.Add(new
                     {
                         Name = dto.Name,
-                        Status = $"Error intern: {ex.Message}"
+                        Estat = $"Error intern: {ex.Message}"
                     });
                 }
             }

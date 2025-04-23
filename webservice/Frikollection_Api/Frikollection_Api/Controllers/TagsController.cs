@@ -32,7 +32,8 @@ namespace Frikollection_Api.Controllers
         public async Task<IActionResult> GetAll()
         {
             var tags = await _service.GetAllAsync();
-            return Ok(tags);
+            var dtoResult = tags.Select(_service.ToDto);
+            return Ok(dtoResult);
         }
 
         // GET: api/tags/{id}
@@ -43,7 +44,8 @@ namespace Frikollection_Api.Controllers
             if (tag == null)
                 return NotFound(new { message = "Etiqueta no trobada." });
 
-            return Ok(tag);
+            var dto = _service.ToDto(tag);
+            return Ok(dto);
         }
 
         // PUT: api/tags/{id}

@@ -16,7 +16,7 @@ namespace Frikollection_Api.Controllers
             _productService = productService;
         }
 
-        // PUT: api/products
+        // POST: api/products
         [HttpPost]
         public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto dto)
         {
@@ -41,6 +41,49 @@ namespace Frikollection_Api.Controllers
             var product = await _productService.CreateProductAsync(dto);
             var dtoResult = _productService.ToDto(product);
             return Ok(dtoResult);
+        }
+
+        // POST: api/products/create-multiple
+        [HttpPost("create-multiple")]
+        public async Task<IActionResult> CreateMultipleProducts([FromBody] List<CreateProductDto> productDtos)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var createdProducts = new List<ProductDto>();
+            var errors = new List<object>();
+
+            foreach (var dto in productDtos)
+            {
+                if (dto.ProductExtensionId != null && dto.ProductTypeId != null)
+                {
+                    var type = await _productService.GetProductTypeByIdAsync(dto.ProductTypeId.Value);
+                    if (type != null && type.HasExtension == false)
+                    {
+                        errors.Add(new { dto.Name, message = "Aquest tipus de producte no admet extensió." });
+                        continue;
+                    }
+
+                    var extension = await _productService.GetProductExtensionByIdAsync(dto.ProductExtensionId.Value);
+                    if (extension == null)
+                    {
+                        errors.Add(new { dto.Name, message = "Extensió no vàlida." });
+                        continue;
+                    }
+                }
+
+                try
+                {
+                    var product = await _productService.CreateProductAsync(dto);
+                    createdProducts.Add(_productService.ToDto(product));
+                }
+                catch (Exception ex)
+                {
+                    errors.Add(new { dto.Name, message = "Error creant el producte", details = ex.Message });
+                }
+            }
+
+            return Ok(new { created = createdProducts, errors });
         }
 
         // GET: api/products/{id}
@@ -83,11 +126,6 @@ namespace Frikollection_Api.Controllers
                 if (extension == null)
                 {
                     return BadRequest(new { message = "Extensió no vàlida." });
-                }
-
-                if (string.IsNullOrWhiteSpace(extension.Expansion) || string.IsNullOrWhiteSpace(extension.Package))
-                {
-                    return BadRequest(new { message = "L'extensió ha de tenir informats tant el camp 'expansion' com 'package'." });
                 }
             }
 

@@ -37,7 +37,7 @@ namespace Frikollection_Api.Services
                 Birthday = dto.Birthday,
                 Nickname = dto.FirstName,
                 Avatar = "https://localhost:7228/images/uploads/avatar/default.jpg",
-                RegisterDate = DateTime.UtcNow
+                RegisterDate = DateTime.Now
             };
 
             // Hashejar la contrasenya abans de guardar-la
@@ -122,7 +122,7 @@ namespace Frikollection_Api.Services
             if (result == PasswordVerificationResult.Failed)
                 return null;
 
-            user.LastLogin = DateTime.UtcNow;
+            user.LastLogin = DateTime.Now;
             await _context.SaveChangesAsync();
 
             return user;
@@ -214,6 +214,15 @@ namespace Frikollection_Api.Services
             var user = await _context.Users.FindAsync(id);
             if (user == null)
                 return false;
+
+            await DeleteAllNotificationsAsync(id);
+
+            var followerNotifications = await _context.Notifications
+                .Where(n => n.FollowerUserId == id)
+                .ToListAsync();
+
+            if (followerNotifications.Any())
+                _context.Notifications.RemoveRange(followerNotifications);
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();

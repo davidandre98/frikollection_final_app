@@ -45,13 +45,23 @@ namespace Frikollection_Api.Services
             // Assignar ProductExtensionId a Product
             product.ProductExtensionId = extension.ProductExtensionId;
 
-            // Assignar Supertype a Product
-            if (!dto.Supertype.IsNullOrEmpty())
-                product.Supertype = dto.Supertype;
+            // Assignar mesures i Supertype a Product
+            product.Width = 6.4;
+            product.Height = 8.9;
+            product.Supertype = "Card";
 
+            // Assignar License a Product
+            if (!dto.Supertype.IsNullOrEmpty())
+                product.License = dto.Supertype;
+            
             // Assignar Subtype a Product
             if (!dto.Rarity.IsNullOrEmpty())
+            {
                 product.Subtype = dto.Rarity;
+            } else
+            {
+                product.Subtype = "Common";
+            }
 
             // Assignar Release a Product
             if (DateOnly.TryParse(dto.Set?.ReleaseDate, out var releaseDate))
@@ -83,6 +93,23 @@ namespace Frikollection_Api.Services
             }
 
             _context.ProductExtensions.Add(extension);
+
+            if (dto.Subtypes != null && dto.Subtypes.Any())
+            {
+                var allTags = await _context.Tags.ToListAsync();
+                var matchingTags = allTags
+                    .Where(tag => dto.Subtypes.Contains(tag.Name, StringComparer.OrdinalIgnoreCase))
+                    .ToList();
+
+                foreach (var tag in matchingTags)
+                {
+                    if (!product.Tags.Any(t => t.TagId == tag.TagId))
+                    {
+                        product.Tags.Add(tag);
+                    }
+                }
+            }
+
             await _context.SaveChangesAsync();
 
             return extension;

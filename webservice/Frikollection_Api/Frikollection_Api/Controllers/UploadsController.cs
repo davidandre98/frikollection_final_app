@@ -145,8 +145,8 @@ namespace Frikollection_Api.Controllers
             return Ok(imageUrls);
         }
 
-        // DELETE: api/uploads/delete-temp
-        [HttpDelete("delete-tcg")]
+        // DELETE: api/uploads/delete-files
+        [HttpDelete("delete-files")]
         public IActionResult DeleteTemporaryImages([FromQuery] string productType, [FromQuery] string[] fileNames)
         {
             var allowedTypes = new[] { "figure", "funko", "tag", "tcg" };
@@ -179,6 +179,48 @@ namespace Frikollection_Api.Controllers
                 ProductType = productType,
                 Deleted = deletedFiles,
                 NotFound = notFoundFiles
+            });
+        }
+
+        // DELETE: api/uploads/delete-all
+        [HttpDelete("delete-all")]
+        public IActionResult DeleteAllImagesOfProductType([FromQuery] string productType)
+        {
+            var allowedTypes = new[] { "figure", "funko", "tag", "tcg" };
+            if (!allowedTypes.Contains(productType.ToLower()))
+            {
+                return BadRequest(new { message = $"Tipus d'imatge no vàlid. Usa: {string.Join(", ", allowedTypes)}" });
+            }
+
+            var uploadFolder = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads", productType);
+
+            if (!Directory.Exists(uploadFolder))
+            {
+                return NotFound(new { message = $"La carpeta per al tipus '{productType}' no existeix." });
+            }
+
+            var deletedFiles = new List<string>();
+            var failedToDelete = new List<string>();
+
+            var files = Directory.GetFiles(uploadFolder);
+            foreach (var file in files)
+            {
+                try
+                {
+                    System.IO.File.Delete(file);
+                    deletedFiles.Add(Path.GetFileName(file));
+                }
+                catch
+                {
+                    failedToDelete.Add(Path.GetFileName(file));
+                }
+            }
+
+            return Ok(new
+            {
+                ProductType = productType,
+                Deleted = deletedFiles,
+                Failed = failedToDelete
             });
         }
     }

@@ -1,5 +1,6 @@
 ﻿using Frikollection_Api.DTOs.ProductExtension;
 using Frikollection_Api.DTOs.ProductType;
+using Frikollection_Api.DTOs.Tag;
 
 namespace Frikollection_Api.DTOs.Product
 {
@@ -19,5 +20,6 @@ namespace Frikollection_Api.DTOs.Product
         public string? BigPicture { get; set; }
         public ProductTypeDto? ProductType { get; set; }
         public ProductExtensionDto? ProductExtension { get; set; }
+        public List<TagDto>? Tags { get; set; }
     }
 }

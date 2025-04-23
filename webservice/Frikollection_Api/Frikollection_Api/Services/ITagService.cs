@@ -10,5 +10,6 @@ namespace Frikollection_Api.Services
         Task<Tag?> GetByIdAsync(Guid id);
         Task<bool> UpdateAsync(UpdateTagDto dto);
         Task<bool> DeleteAsync(Guid id);
+        TagDto ToDto(Tag tag);
     }
 }

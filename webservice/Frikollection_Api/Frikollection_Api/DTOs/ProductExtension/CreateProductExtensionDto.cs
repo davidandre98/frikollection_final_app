@@ -9,7 +9,9 @@ namespace Frikollection_Api.DTOs.ProductExtension
 
         public string Supertype { get; set; }
 
-        public string Rarity { get; set; }
+        public List<string>? Subtypes { get; set; }
+
+        public string? Rarity { get; set; }
 
         public int? Hp { get; set; }
 

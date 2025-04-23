@@ -63,5 +63,14 @@ namespace Frikollection_Api.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public TagDto ToDto(Tag tag)
+        {
+            return new TagDto
+            {
+                Name = tag.Name,
+                TagImage = tag.TagImage
+            };
+        }
     }
 }

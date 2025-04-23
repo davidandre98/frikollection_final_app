@@ -32,7 +32,7 @@ namespace Frikollection_Api.Services
                 Name = dto.Name,
                 Private = dto.Private,
                 UserId = dto.UserId,
-                CreationDate = DateOnly.FromDateTime(DateTime.UtcNow)
+                CreationDate = DateOnly.FromDateTime(DateTime.Now)
             };
 
             _context.Collections.Add(collection);
@@ -159,7 +159,7 @@ namespace Frikollection_Api.Services
             {
                 UserId = userId,
                 CollectionId = collectionId,
-                FollowDate = DateTime.UtcNow,
+                FollowDate = DateTime.Now,
                 NotificationsEnabled = true
             };
 
@@ -197,7 +197,7 @@ namespace Frikollection_Api.Services
                 FollowerUserId = follower.UserId,
                 CollectionId = collection.CollectionId,
                 Message = $"{follower.Nickname} ha començat a seguir la teva col·lecció {collection.Name}.",
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
                 IsRead = false
             };
 
@@ -242,7 +242,7 @@ namespace Frikollection_Api.Services
             return collections;
         }
 
-        public async Task<(List<Guid> Added, List<Guid> AlreadyExists)> AddProductToCollectionAsync(AddProductToCollectionDto dto)
+        public async Task<(List<string> Added, List<string> AlreadyExists)> AddProductToCollectionAsync(AddProductToCollectionDto dto)
         {
             var existingIds = await _context.CollectionProducts
                 .Where(cp => cp.CollectionId == dto.CollectionId && dto.ProductIds.Contains(cp.ProductId))
@@ -260,7 +260,17 @@ namespace Frikollection_Api.Services
             _context.CollectionProducts.AddRange(newEntries);
             await _context.SaveChangesAsync();
 
-            return (newIds, existingIds);
+            var addedNames = await _context.Products
+                .Where(p => newIds.Contains(p.ProductId))
+                .Select(p => p.Name)
+                .ToListAsync();
+
+            var existingNames = await _context.Products
+                .Where(p => existingIds.Contains(p.ProductId))
+                .Select(p => p.Name)
+                .ToListAsync();
+
+            return (addedNames, existingNames);
         }
 
         public async Task<bool> RemoveProductFromCollectionAsync(Guid collectionId, Guid productId)
@@ -273,18 +283,17 @@ namespace Frikollection_Api.Services
             return true;
         }
 
-        public async Task<IEnumerable<Product>> GetProductsInCollectionAsync(Guid collectionId)
+        public async Task<IEnumerable<ProductDto>> GetProductsInCollectionAsync(Guid collectionId)
         {
-            return await _context.CollectionProducts
-                .Where(cp => cp.CollectionId == collectionId)
-                .Include(cp => cp.Product)
-                    .ThenInclude(p => p.ProductType)
-                .Include(cp => cp.Product)
-                    .ThenInclude(p => p.ProductExtension)
-                .Include(cp => cp.Product)
-                    .ThenInclude(p => p.Tags)
-                .Select(cp => cp.Product)
+            var products = await _context.Products
+                .Where(p => _context.CollectionProducts
+                    .Any(cp => cp.CollectionId == collectionId && cp.ProductId == p.ProductId))
+                .Include(p => p.ProductType)
+                .Include(p => p.ProductExtension)
+                .Include(p => p.Tags)
                 .ToListAsync();
+
+            return products.Select(p => _productService.ToDto(p));
         }
 
         public async Task<CollectionStatsDto> GetCollectionStatsAsync(Guid collectionId)
@@ -311,6 +320,12 @@ namespace Frikollection_Api.Services
 
         public CollectionPreviewDto ToDto(Collection collection)
         {
+            if (collection.User == null)
+            {
+                collection.User = _context.Users
+                    .FirstOrDefault(u => u.UserId == collection.UserId);
+            }
+
             return new CollectionPreviewDto
             {
                 Name = collection.Name,

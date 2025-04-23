@@ -1,6 +1,7 @@
 ﻿using Frikollection_Api.DTOs.Product;
 using Frikollection_Api.DTOs.ProductExtension;
 using Frikollection_Api.DTOs.ProductType;
+using Frikollection_Api.DTOs.Tag;
 using Frikollection_Api.Infraestructure;
 using Frikollection_Api.Models;
 using Microsoft.EntityFrameworkCore;
@@ -203,7 +204,12 @@ namespace Frikollection_Api.Services
                         Package = product.ProductExtension.Package,
                         Expansion = product.ProductExtension.Expansion
                     }
-                    : null
+                    : null,
+                Tags = product.Tags.Select(t => new TagDto
+                {
+                    Name = t.Name,
+                    TagImage = t.TagImage
+                }).ToList()
             };
         }
     }

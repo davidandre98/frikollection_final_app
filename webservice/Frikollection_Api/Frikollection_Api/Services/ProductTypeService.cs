@@ -63,5 +63,17 @@ namespace Frikollection_Api.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public ProductTypeDto ToDto(ProductType productType)
+        {
+            if (productType == null)
+                return null;
+
+            return new ProductTypeDto
+            {
+                TypeName = productType.TypeName,
+                HasExtension = productType.HasExtension
+            };
+        }
     }
 }

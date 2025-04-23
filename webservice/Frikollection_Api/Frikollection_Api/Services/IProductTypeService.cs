@@ -10,5 +10,6 @@ namespace Frikollection_Api.Services
         Task<ProductType?> GetByIdAsync(Guid id);
         Task<bool> UpdateAsync(UpdateProductTypeDto dto);
         Task<bool> DeleteAsync(Guid id);
+        ProductTypeDto ToDto(ProductType productType);
     }
 }

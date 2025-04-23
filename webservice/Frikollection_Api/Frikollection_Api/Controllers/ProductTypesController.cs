@@ -24,7 +24,9 @@ namespace Frikollection_Api.Controllers
                 return BadRequest(ModelState);
 
             var created = await _service.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = created.ProductTypeId }, created);
+            var dtoResult = _service.ToDto(created);
+
+            return Ok(dtoResult);
         }
 
         // GET: api/producttypes
@@ -32,7 +34,9 @@ namespace Frikollection_Api.Controllers
         public async Task<IActionResult> GetAll()
         {
             var types = await _service.GetAllAsync();
-            return Ok(types);
+            var dtoList = types.Select(t => _service.ToDto(t)).ToList();
+
+            return Ok(dtoList);
         }
 
         // GET: api/producttypes/{id}
@@ -43,7 +47,8 @@ namespace Frikollection_Api.Controllers
             if (type == null)
                 return NotFound(new { message = "Tipus de producte no trobat." });
 
-            return Ok(type);
+            var dto = _service.ToDto(type);
+            return Ok(dto);
         }
 
         // PUT: api/producttypes/{id}
