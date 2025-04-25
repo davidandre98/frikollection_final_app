@@ -20,7 +20,6 @@ namespace Frikollection_Api.DTOs.Product
         [StringLength(100)]
         public string? Subtype { get; set; }
 
-        [StringLength(50)]
         public int? ItemNumber { get; set; }
 
         public decimal? Value { get; set; }

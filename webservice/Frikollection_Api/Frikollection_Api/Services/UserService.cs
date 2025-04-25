@@ -36,7 +36,7 @@ namespace Frikollection_Api.Services
                 LastName = dto.LastName,
                 Birthday = dto.Birthday,
                 Nickname = dto.FirstName,
-                Avatar = "https://localhost:7228/images/uploads/avatar/default.jpg",
+                Avatar = "/images/uploads/avatar/default.jpg",
                 RegisterDate = DateTime.Now
             };
 
@@ -44,6 +44,27 @@ namespace Frikollection_Api.Services
             user.Password = _passwordHasher.HashPassword(user, dto.Password);
 
             _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            var myWishlist = new Collection
+            {
+                CollectionId = Guid.NewGuid(),
+                UserId = user.UserId,
+                Name = "My Wishlist",
+                Private = true,
+                CreationDate = DateOnly.FromDateTime(DateTime.Now)
+            };
+
+            var myCollection = new Collection
+            {
+                CollectionId = Guid.NewGuid(),
+                UserId = user.UserId,
+                Name = "My Collection",
+                Private = true,
+                CreationDate = DateOnly.FromDateTime(DateTime.Now)
+            };
+
+            _context.Collections.AddRange(myWishlist, myCollection);
             await _context.SaveChangesAsync();
 
             return user;

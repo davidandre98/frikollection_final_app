@@ -77,6 +77,9 @@ namespace Frikollection_Api.Services
             var collection = await _context.Collections.FindAsync(id);
             if (collection == null) return false;
 
+            if (collection.Name == "My Wishlist" || collection.Name == "My Collection")
+                throw new InvalidOperationException("No es poden eliminar les col·leccions per defecte.");
+
             _context.Collections.Remove(collection);
             await _context.SaveChangesAsync();
             return true;
@@ -87,6 +90,9 @@ namespace Frikollection_Api.Services
             var collection = await _context.Collections.FindAsync(id);
             if (collection == null)
                 return null;
+
+            if ((collection.Name == "My Wishlist" || collection.Name == "My Collection") && collection.Name != dto.Name)
+                throw new InvalidOperationException("No es pot modificar el nom d’una col·lecció per defecte.");
 
             var duplicateName = await _context.Collections
                 .AnyAsync(c => c.UserId == collection.UserId && c.Name == dto.Name && c.CollectionId != id);

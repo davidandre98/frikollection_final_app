@@ -77,19 +77,16 @@ namespace Frikollection_Api.Services
             // Desar imatges al servidor i assignar el path absolut
             if (dto.Images != null)
             {
-                var request = _httpContextAccessor.HttpContext?.Request;
-                var host = request != null ? $"{request.Scheme}://{request.Host}" : "";
-
                 var baseImageName = $"{dto.Name}_{dto.Set?.Name}_{dto.Set?.Series}";
 
                 var smallPath = await ImageHelper.DownloadAndSaveImageAsync(dto.Images.Small, baseImageName);
                 var largePath = await ImageHelper.DownloadAndSaveImageAsync(dto.Images.Large, baseImageName + "_large");
 
                 if (smallPath != null)
-                    product.SmallPicture = host + smallPath;
+                    product.SmallPicture = smallPath;
 
                 if (largePath != null)
-                    product.BigPicture = host + largePath;
+                    product.BigPicture = largePath;
             }
 
             _context.ProductExtensions.Add(extension);

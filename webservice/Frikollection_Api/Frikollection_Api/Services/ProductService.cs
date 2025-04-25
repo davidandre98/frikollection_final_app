@@ -64,7 +64,12 @@ namespace Frikollection_Api.Services
             }
 
             await _context.SaveChangesAsync();
-            return product;
+
+            return await _context.Products
+                .Include(p => p.ProductType)
+                .Include(p => p.ProductExtension)
+                .Include(p => p.Tags)
+                .FirstOrDefaultAsync(p => p.ProductId == product.ProductId);
         }
 
         public async Task<Product?> GetByIdAsync(Guid id)

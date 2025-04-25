@@ -50,7 +50,7 @@ namespace Frikollection_Api.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            var imageUrl = $"{Request.Scheme}://{Request.Host}/images/uploads/{productType}/{originalFileName}";
+            var imageUrl = $"/images/uploads/{productType}/{originalFileName}";
             return Ok(new { url = imageUrl });
         }
 
@@ -88,7 +88,7 @@ namespace Frikollection_Api.Controllers
             using var stream = new FileStream(filePath, FileMode.Create);
             await file.CopyToAsync(stream);
 
-            var avatarUrl = $"{Request.Scheme}://{Request.Host}/images/uploads/avatar/{fileName}";
+            var avatarUrl = $"/images/uploads/avatar/{fileName}";
             user.Avatar = avatarUrl;
             await _context.SaveChangesAsync();
 
@@ -112,7 +112,7 @@ namespace Frikollection_Api.Controllers
                     continue;
 
                 var images = Directory.GetFiles(typeFolder)
-                    .Select(file => $"{Request.Scheme}://{Request.Host}/images/uploads/{type}/{Path.GetFileName(file)}")
+                    .Select(file => $"/images/uploads/{type}/{Path.GetFileName(file)}")
                     .ToList();
 
                 imageUrls.Add(new
@@ -139,7 +139,7 @@ namespace Frikollection_Api.Controllers
                 return NotFound(new { message = $"No s'ha trobat la carpeta per al tipus '{productType}'." });
 
             var imageUrls = Directory.GetFiles(typeFolder)
-                .Select(file => $"{Request.Scheme}://{Request.Host}/images/uploads/{productType}/{Path.GetFileName(file)}")
+                .Select(file => $"/images/uploads/{productType}/{Path.GetFileName(file)}")
                 .ToList();
 
             return Ok(imageUrls);
