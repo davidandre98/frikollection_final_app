@@ -3,9 +3,10 @@ package org.example.frikollection_mobile_desktop.collection
 import org.example.frikollection_mobile_desktop.models.collection.CollectionDto
 import org.example.frikollection_mobile_desktop.models.collection.CollectionStatsDto
 import org.example.frikollection_mobile_desktop.models.collection.FollowedCollectionDto
+import org.example.frikollection_mobile_desktop.models.collection.UserCollectionDto
 
 data class CollectionUiState(
-    val userCollections: List<CollectionDto> = emptyList(),
+    val userCollections: List<UserCollectionDto> = emptyList(),
     val followedCollections: List<FollowedCollectionDto> = emptyList(),
     val selectedCollection: CollectionDto? = null,
     val statsMap: Map<String, CollectionStatsDto> = emptyMap(),

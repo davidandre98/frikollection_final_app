@@ -123,7 +123,7 @@ fun CollectionScreen(
                                 subtitle = "Owner",
                                 productCount = stats?.totalProducts ?: collection.products.size,
                                 imageRes = null,
-                                isPrivate = collection.isPrivate,
+                                isPrivate = collection.private,
                                 onClick = { /* TODO */ }
                             )
                         }

@@ -1,10 +1,9 @@
-package org.example.frikollection_mobile_desktop.models.user
+package org.example.frikollection_mobile_desktop.models.collection
 
 import kotlinx.serialization.Serializable
-import org.example.frikollection_mobile_desktop.models.collection.FollowedCollectionDto
 
 @Serializable
-data class UserDto(
+data class UserFollowedCollectionDto(
     val userId: String,
     val username: String,
     val nickname: String,

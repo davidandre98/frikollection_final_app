@@ -17,7 +17,7 @@ import org.example.frikollection_mobile_desktop.models.collection.FollowedCollec
 import org.example.frikollection_mobile_desktop.models.collection.UserCollectionDto
 import org.example.frikollection_mobile_desktop.models.product.ProductDto
 import org.example.frikollection_mobile_desktop.models.product.ProductTypeDto
-import org.example.frikollection_mobile_desktop.models.user.UserDto
+import org.example.frikollection_mobile_desktop.models.collection.UserFollowedCollectionDto
 import org.example.frikollection_mobile_desktop.register.RegisterUserRequest
 
 object ApiClient {
@@ -110,7 +110,7 @@ object ApiClient {
     }
 
     // CARREGAR COL·LECCIONS DE L'USUARI
-    suspend fun getUserCollections(userId: String): List<CollectionDto> {
+    suspend fun getUserCollections(userId: String): List<UserCollectionDto> {
         val response = client.get("${baseUrl}/api/users/$userId/collections") {
             contentType(ContentType.Application.Json)
         }
@@ -124,8 +124,7 @@ object ApiClient {
             contentType(ContentType.Application.Json)
         }
 
-        val userDto = response.body<UserDto>()
-        return userDto.followedCollections
+        return response.body()
     }
 
     // CARREGAR ESTADISTIQUES DE COL·LECCIONS

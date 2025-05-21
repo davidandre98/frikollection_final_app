@@ -7,7 +7,7 @@ import org.example.frikollection_mobile_desktop.models.product.ProductDto
 data class UserCollectionDto(
     val collectionId: String,
     val name: String,
-    val isPrivate: Boolean,
-    val createdAt: String,
+    val private: Boolean,
+    val creationDate: String,
     val products: List<ProductDto>
 )
