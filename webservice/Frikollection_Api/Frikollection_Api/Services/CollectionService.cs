@@ -119,12 +119,27 @@ namespace Frikollection_Api.Services
             else if (visibility == "private")
                 query = query.Where(c => c.Private == true);
 
+            query = query
+                .Include(c => c.CollectionProducts)
+                    .ThenInclude(cp => cp.Product)
+                        .ThenInclude(p => p.ProductType)
+                .Include(c => c.CollectionProducts)
+                    .ThenInclude(cp => cp.Product)
+                        .ThenInclude(p => p.ProductExtension)
+                .Include(c => c.CollectionProducts)
+                    .ThenInclude(cp => cp.Product)
+                        .ThenInclude(p => p.Tags);
+
             var collections = await query
                 .Select(c => new UserCollectionDto
                 {
+                    CollectionId = c.CollectionId,
                     Name = c.Name,
                     Private = c.Private,
-                    CreationDate = c.CreationDate
+                    CreationDate = c.CreationDate,
+                    Products = c.CollectionProducts
+                        .Select(cp => _productService.ToDto(cp.Product))
+                        .ToList()
                 })
                 .ToListAsync();
 
@@ -135,11 +150,24 @@ namespace Frikollection_Api.Services
         {
             var collections = await _context.Collections
                 .Where(c => c.UserId == userId && c.Private == false)
+                .Include(c => c.CollectionProducts)
+                    .ThenInclude(cp => cp.Product)
+                        .ThenInclude(p => p.ProductType)
+                .Include(c => c.CollectionProducts)
+                    .ThenInclude(cp => cp.Product)
+                        .ThenInclude(p => p.ProductExtension)
+                .Include(c => c.CollectionProducts)
+                    .ThenInclude(cp => cp.Product)
+                        .ThenInclude(p => p.Tags)
                 .Select(c => new UserCollectionDto
                 {
+                    CollectionId = c.CollectionId,
                     Name = c.Name,
                     Private = c.Private,
-                    CreationDate = c.CreationDate
+                    CreationDate = c.CreationDate,
+                    Products = c.CollectionProducts
+                        .Select(cp => _productService.ToDto(cp.Product))
+                        .ToList()
                 })
                 .ToListAsync();
 
@@ -237,11 +265,27 @@ namespace Frikollection_Api.Services
         {
             var collections = await _context.UserFollowCollections
                 .Where(f => f.UserId == userId && f.Collection.Private == false)
+                .Include(f => f.Collection)
+                    .ThenInclude(c => c.CollectionProducts)
+                        .ThenInclude(cp => cp.Product)
+                            .ThenInclude(p => p.ProductType)
+                .Include(f => f.Collection)
+                    .ThenInclude(c => c.CollectionProducts)
+                        .ThenInclude(cp => cp.Product)
+                            .ThenInclude(p => p.ProductExtension)
+                .Include(f => f.Collection)
+                    .ThenInclude(c => c.CollectionProducts)
+                        .ThenInclude(cp => cp.Product)
+                            .ThenInclude(p => p.Tags)
                 .Select(f => new UserCollectionDto
                 {
+                    CollectionId = f.CollectionId,
                     Name = f.Collection.Name,
                     Private = f.Collection.Private,
-                    CreationDate = f.Collection.CreationDate
+                    CreationDate = f.Collection.CreationDate,
+                    Products = f.Collection.CollectionProducts
+                        .Select(cp => _productService.ToDto(cp.Product))
+                        .ToList()
                 })
                 .ToListAsync();
 

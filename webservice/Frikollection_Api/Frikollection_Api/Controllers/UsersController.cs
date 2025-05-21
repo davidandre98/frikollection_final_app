@@ -115,9 +115,6 @@ namespace Frikollection_Api.Controllers
         {
             var collections = await _collectionService.GetUserCollectionsAsync(id, visibility);
 
-            if (!collections.Any())
-                return NotFound(new { message = "Aquest usuari no té col·leccions amb aquest filtre." });
-
             return Ok(collections);
         }
 
@@ -127,9 +124,6 @@ namespace Frikollection_Api.Controllers
         {
             var collections = await _collectionService.GetPublicCollectionsByUserAsync(id);
 
-            if (!collections.Any())
-                return NotFound(new { message = "Aquest usuari no té col·leccions públiques." });
-
             return Ok(collections);
         }
 
@@ -138,9 +132,6 @@ namespace Frikollection_Api.Controllers
         public async Task<ActionResult<IEnumerable<UserCollectionDto>>> GetFollowedCollections(Guid id)
         {
             var collections = await _collectionService.GetFollowedCollectionsAsync(id);
-
-            if (!collections.Any())
-                return NotFound(new { message = "Aquest usuari no segueix cap col·lecció." });
 
             return Ok(collections);
         }

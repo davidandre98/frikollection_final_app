@@ -27,7 +27,7 @@ namespace Frikollection_Api.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest(new { message = "No s'ha proporcionat cap fitxer." });
 
-            var allowedTypes = new[] { "figure", "funko", "tag", "tcg" };
+            var allowedTypes = new[] { "figure", "funko", "tag", "tcg", "logo", "carroussel" };
             if (!allowedTypes.Contains(productType.ToLower()))
                 return BadRequest(new { message = $"Tipus d'imatge no vàlid. Usa: {string.Join(", ", allowedTypes)}" });
 
@@ -101,7 +101,7 @@ namespace Frikollection_Api.Controllers
         public IActionResult GetAllProductImages()
         {
             var basePath = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads");
-            var allowedTypes = new[] { "avatar", "figure", "funko", "tag", "tcg" };
+            var allowedTypes = new[] { "avatar", "figure", "funko", "tag", "tcg", "logo", "carroussel" };
 
             var imageUrls = new List<object>();
 
@@ -130,7 +130,7 @@ namespace Frikollection_Api.Controllers
         [HttpGet("images/{productType}")]
         public IActionResult GetProductImagesByType(string productType)
         {
-            var allowedTypes = new[] { "avatar", "figure", "funko", "tag", "tcg" };
+            var allowedTypes = new[] { "avatar", "figure", "funko", "tag", "tcg", "logo", "carroussel" };
             if (!allowedTypes.Contains(productType.ToLower()))
                 return BadRequest(new { message = $"Tipus d'imatge no vàlid. Usa: {string.Join(", ", allowedTypes)}" });
 
@@ -149,7 +149,7 @@ namespace Frikollection_Api.Controllers
         [HttpDelete("delete-files")]
         public IActionResult DeleteTemporaryImages([FromQuery] string productType, [FromQuery] string[] fileNames)
         {
-            var allowedTypes = new[] { "figure", "funko", "tag", "tcg" };
+            var allowedTypes = new[] { "figure", "funko", "tag", "tcg", "logo", "carroussel" };
             if (!allowedTypes.Contains(productType.ToLower()))
             {
                 return BadRequest(new { message = $"Tipus d'imatge no vàlid. Usa: {string.Join(", ", allowedTypes)}" });
@@ -186,7 +186,7 @@ namespace Frikollection_Api.Controllers
         [HttpDelete("delete-all")]
         public IActionResult DeleteAllImagesOfProductType([FromQuery] string productType)
         {
-            var allowedTypes = new[] { "figure", "funko", "tag", "tcg" };
+            var allowedTypes = new[] { "figure", "funko", "tag", "tcg", "logo", "carroussel" };
             if (!allowedTypes.Contains(productType.ToLower()))
             {
                 return BadRequest(new { message = $"Tipus d'imatge no vàlid. Usa: {string.Join(", ", allowedTypes)}" });

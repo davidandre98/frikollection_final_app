@@ -6,6 +6,7 @@ namespace Frikollection_Api.DTOs.Product
 {
     public class ProductDto
     {
+        public Guid ProductId { get; set; }
         public string Name { get; set; } = null!;
         public string? Supertype { get; set; }
         public string? Subtype { get; set; }

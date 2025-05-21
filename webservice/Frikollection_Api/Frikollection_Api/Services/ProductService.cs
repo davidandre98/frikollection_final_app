@@ -174,6 +174,7 @@ namespace Frikollection_Api.Services
         {
             return new ProductDto
             {
+                ProductId = product.ProductId,
                 Name = product.Name,
                 Supertype = product.Supertype,
                 Subtype = product.Subtype,
