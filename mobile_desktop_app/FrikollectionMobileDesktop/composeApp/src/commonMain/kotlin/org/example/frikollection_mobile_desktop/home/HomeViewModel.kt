@@ -5,7 +5,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.example.frikollection_mobile_desktop.api.ApiClient
-import org.example.frikollection_mobile_desktop.models.ProductDto
+import org.example.frikollection_mobile_desktop.models.product.ProductDto
+import org.example.frikollection_mobile_desktop.models.ProductFilter
 
 class HomeViewModel {
 
@@ -34,7 +35,8 @@ class HomeViewModel {
                 val products: List<ProductDto> = ApiClient.getAllProducts()
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    allProducts = products
+                    allProducts = products,
+                    error = null
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -65,5 +67,25 @@ class HomeViewModel {
                 println("Error carregant carroussel: ${e.message}")
             }
         }
+    }
+
+    fun onFilterChange(newFilter: ProductFilter) {
+        _uiState.value = _uiState.value.copy(filter = newFilter)
+    }
+
+    fun onFilterRemoved(updated: ProductFilter) {
+        _uiState.value = _uiState.value.copy(filter = updated)
+    }
+
+    fun onSortChanged(sort: SortOption) {
+        _uiState.value = _uiState.value.copy(sort = sort)
+    }
+
+    fun setSelectedType(type: String?) {
+        _uiState.value = _uiState.value.copy(selectedType = type)
+    }
+
+    fun setSelectedStatus(status: String?) {
+        _uiState.value = _uiState.value.copy(selectedStatus = status)
     }
 }

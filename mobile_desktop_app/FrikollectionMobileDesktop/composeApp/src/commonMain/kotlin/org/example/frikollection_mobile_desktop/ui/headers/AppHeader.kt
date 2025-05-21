@@ -10,9 +10,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.example.frikollection_mobile_desktop.api.AppConfig
 import org.example.frikollection_mobile_desktop.ui.ServerImage
+import org.example.frikollection_mobile_desktop.utils.isAndroidPlatform
 
 @Composable
 fun AppHeader(
@@ -21,6 +21,7 @@ fun AppHeader(
     showSearch: Boolean = false,
     onSearch: (() -> Unit)? = null
 ) {
+    val logoSize = if (isAndroidPlatform()) 24.dp else 32.dp
     TopAppBar(
         backgroundColor = Color.White,
         contentColor = Color.Black,
@@ -36,7 +37,7 @@ fun AppHeader(
         ) {
             if (showBack && onBack != null) {
                 IconButton(
-                    onClick = onBack,
+                    onClick = { onBack() },
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -47,19 +48,18 @@ fun AppHeader(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // CANVIAR URL AL INICIAR SERVIDOR
             ServerImage(
-                imageUrl = "${AppConfig.base_url}/images/uploads/logo/logo_frikollection.png",
+                imageUrl = "${AppConfig.base_url}/images/uploads/logo/logo_header.png",
                 contentDescription = "App Logo",
                 modifier = Modifier
-                    .height(32.dp)
+                    .height(logoSize)
             )
 
             Spacer(modifier = Modifier.weight(1f))
 
             if (showSearch && onSearch != null) {
                 IconButton(
-                    onClick = { onSearch },
+                    onClick = { onSearch() },
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
                     Icon(Icons.Default.Search, contentDescription = "Search")

@@ -11,8 +11,13 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import org.example.frikollection_mobile_desktop.models.ProductDto
-import org.example.frikollection_mobile_desktop.models.ProductTypeDto
+import org.example.frikollection_mobile_desktop.models.collection.CollectionDto
+import org.example.frikollection_mobile_desktop.models.collection.CollectionStatsDto
+import org.example.frikollection_mobile_desktop.models.collection.FollowedCollectionDto
+import org.example.frikollection_mobile_desktop.models.collection.UserCollectionDto
+import org.example.frikollection_mobile_desktop.models.product.ProductDto
+import org.example.frikollection_mobile_desktop.models.product.ProductTypeDto
+import org.example.frikollection_mobile_desktop.models.user.UserDto
 import org.example.frikollection_mobile_desktop.register.RegisterUserRequest
 
 object ApiClient {
@@ -48,11 +53,14 @@ object ApiClient {
         }
 
         if (response.status.isSuccess()) {
-            return response.body()
+            val loginResponse = response.body<LoginResponse>()
+            AppConfig.loggedUserId = loginResponse.userId
+            return loginResponse
         } else {
             val body = response.bodyAsText()
-            val errorMsg = Json.decodeFromString<Map<String, String>>(body)["message"]
-                ?: "Login error"
+            var errorMsg = Json.decodeFromString<Map<String, String>>(body)["message"]
+            errorMsg = if (errorMsg!!.length > 20) "Login error" else errorMsg
+
             throw Exception(errorMsg)
         }
     }
@@ -99,6 +107,34 @@ object ApiClient {
 
         val result = response.body<List<ProductTypeDto>>()
         return result.mapNotNull { it.typeName }
+    }
+
+    // CARREGAR COL·LECCIONS DE L'USUARI
+    suspend fun getUserCollections(userId: String): List<CollectionDto> {
+        val response = client.get("${baseUrl}/api/users/$userId/collections") {
+            contentType(ContentType.Application.Json)
+        }
+
+        return response.body()
+    }
+
+    // CARREGAR COL·LECCIONS SEGUIDES PER L'USUARI
+    suspend fun getFollowedCollections(userId: String): List<FollowedCollectionDto> {
+        val response = client.get("${baseUrl}/api/users/$userId/collections/followed") {
+            contentType(ContentType.Application.Json)
+        }
+
+        val userDto = response.body<UserDto>()
+        return userDto.followedCollections
+    }
+
+    // CARREGAR ESTADISTIQUES DE COL·LECCIONS
+    suspend fun getCollectionStats(collectionId: String): CollectionStatsDto {
+        val response: HttpResponse = client.get("$baseUrl/api/collections/$collectionId/stats") {
+            contentType(ContentType.Application.Json)
+        }
+
+        return response.body()
     }
 }
 

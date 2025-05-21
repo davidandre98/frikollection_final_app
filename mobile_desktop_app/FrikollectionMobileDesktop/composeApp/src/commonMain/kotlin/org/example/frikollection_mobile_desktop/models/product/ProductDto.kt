@@ -1,4 +1,4 @@
-package org.example.frikollection_mobile_desktop.models
+package org.example.frikollection_mobile_desktop.models.product
 
 import kotlinx.serialization.Serializable
 

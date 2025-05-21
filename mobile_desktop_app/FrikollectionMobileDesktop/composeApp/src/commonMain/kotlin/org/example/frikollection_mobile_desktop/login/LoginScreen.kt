@@ -30,6 +30,7 @@ fun LoginScreen(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0x66CCCCCC))
             .padding(horizontal = 24.dp),
         contentAlignment = Alignment.Center
     ) {
