@@ -15,8 +15,8 @@ namespace Frikollection_Api.Services
         Task<IEnumerable<UserCollectionDto>> GetPublicCollectionsByUserAsync(Guid userId);
         Task<bool> FollowCollectionAsync(Guid userId, Guid collectionId);
         Task<bool> UnfollowCollectionAsync(Guid userId, Guid collectionId);
-        Task<IEnumerable<UserCollectionDto>> GetFollowedCollectionsAsync(Guid userId);
-        Task<(List<string> Added, List<string> AlreadyExists)> AddProductToCollectionAsync(AddProductToCollectionDto dto);
+        Task<IEnumerable<FollowedCollectionDto>> GetFollowedCollectionsAsync(Guid userId);
+        Task<(List<Guid> Added, List<Guid> AlreadyExists)> AddProductToCollectionAsync(AddProductToCollectionDto dto);
         Task<bool> RemoveProductFromCollectionAsync(Guid collectionId, Guid productId);
         Task<IEnumerable<ProductDto>> GetProductsInCollectionAsync(Guid collectionId);
         Task<CollectionStatsDto> GetCollectionStatsAsync(Guid collectionId);

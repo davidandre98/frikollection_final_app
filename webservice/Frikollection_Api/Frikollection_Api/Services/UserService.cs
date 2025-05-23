@@ -3,7 +3,9 @@ using Frikollection_Api.DTOs.Notification;
 using Frikollection_Api.DTOs.User;
 using Frikollection_Api.Infraestructure;
 using Frikollection_Api.Models;
+using Frikollection_Api.Utils;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Frikollection_Api.Services
@@ -12,11 +14,15 @@ namespace Frikollection_Api.Services
     {
         private readonly FrikollectionContext _context;
         private readonly IPasswordHasher<User> _passwordHasher;
+        private readonly IProductService _productService;
+        private readonly ICollectionService _collectionService;
 
-        public UserService(FrikollectionContext context, IPasswordHasher<User> passwordHasher)
+        public UserService(FrikollectionContext context, IPasswordHasher<User> passwordHasher, IProductService productService, ICollectionService collectionService)
         {
             _context = context;
             _passwordHasher = passwordHasher;
+            _productService = productService;
+            _collectionService = collectionService;
         }
 
         public async Task<User> RegisterAsync(RegisterUserDto dto)
@@ -70,6 +76,45 @@ namespace Frikollection_Api.Services
             return user;
         }
 
+        public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
+        {
+            var users = await _context.Users
+                .Include(u => u.Collections)
+                    .ThenInclude(c => c.CollectionProducts)
+                .ToListAsync(); 
+
+            var userDtos = new List<UserDto>();
+
+            foreach (var user in users)
+            {
+                var ownCollections = await _collectionService.GetUserCollectionsAsync(user.UserId, null);
+                var followedCollections = await _collectionService.GetFollowedCollectionsAsync(user.UserId);
+
+                var dto = new UserDto
+                {
+                    UserId = user.UserId,
+                    Avatar = user.Avatar,
+                    Nickname = user.Nickname,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Birthday = user.Birthday,
+                    Biography = user.Biography,
+                    OwnCollections = user.Collections.Select(c => new CollectionDto
+                    {
+                        CollectionId = c.CollectionId,
+                        Name = c.Name,
+                        Private = c.Private ?? default,
+                        CreationDate = c.CreationDate ?? default,
+                        TotalProducts = c.CollectionProducts?.Count ?? 0
+                    }).ToList()
+                };
+
+                userDtos.Add(dto);
+            }
+
+            return userDtos;
+        }
+
         public async Task<UserDto?> GetByIdAsync(Guid id)
         {
             var user = await _context.Users
@@ -89,17 +134,13 @@ namespace Frikollection_Api.Services
 
             return new UserDto
             {
-                Username = user.Username,
+                UserId = user.UserId,
                 Avatar = user.Avatar,
                 Nickname = user.Nickname,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Email = user.Email,
-                PhoneNumber = user.PhoneNumber,
                 Birthday = user.Birthday ?? default,
                 Biography = user.Biography,
-                RegisterDate = user.RegisterDate,
-                LastLogin = user.LastLogin,
 
                 OwnCollections = user.Collections.Select(c => new CollectionDto
                 {
@@ -109,23 +150,6 @@ namespace Frikollection_Api.Services
                     CreationDate = c.CreationDate ?? default,
                     TotalProducts = c.CollectionProducts?.Count ?? 0
                 }).ToList(),
-
-                FollowedCollections = user.UserFollowCollections.Select(fc => new FollowedCollectionDto
-                {
-                    CollectionId = fc.Collection.CollectionId,
-                    Name = fc.Collection.Name,
-                    OwnerNickname = fc.Collection.User.Nickname,
-                    FollowDate = fc.FollowDate ?? default
-                }).ToList(),
-
-                Notifications = user.NotificationRecipientUsers.Select(n => new NotificationDto
-                {
-                    Message = n.Message,
-                    FollowerNickname = n.FollowerUser?.Nickname,
-                    CollectionName = n.Collection?.Name,
-                    CreatedAt = n.CreatedAt,
-                    IsRead = n.IsRead
-                }).ToList()
             };
         }
 
@@ -149,19 +173,17 @@ namespace Frikollection_Api.Services
             return user;
         }
 
-        public async Task<User?> UpdateUserAsync(Guid id, UpdateUserDto dto)
+        public async Task<ServiceResult<User>> UpdateUserAsync(Guid id, UpdateUserDto dto)
         {
             var user = await _context.Users.FindAsync(id);
             if (user == null)
-                return null;
+                return ServiceResult<User>.Fail("Usuari no trobat.");
 
             if (!string.IsNullOrWhiteSpace(dto.Username) && dto.Username != user.Username)
             {
-                var usernameExists = await _context.Users
-                    .AnyAsync(u => u.Username == dto.Username && u.UserId != id);
-
-                if (usernameExists)
-                    throw new InvalidOperationException("Aquest nom d’usuari ja està en ús.");
+                var exists = await _context.Users.AnyAsync(u => u.Username == dto.Username && u.UserId != id);
+                if (exists)
+                    return ServiceResult<User>.Fail("Aquest nom d’usuari ja està en ús.");
 
                 user.Username = dto.Username;
             }
@@ -169,12 +191,11 @@ namespace Frikollection_Api.Services
             if (!string.IsNullOrWhiteSpace(dto.NewPassword))
             {
                 if (string.IsNullOrWhiteSpace(dto.CurrentPassword))
-                    throw new InvalidOperationException("Has d’introduir la contrasenya actual.");
+                    return ServiceResult<User>.Fail("Has d’introduir la contrasenya actual.");
 
                 var result = _passwordHasher.VerifyHashedPassword(user, user.Password, dto.CurrentPassword);
-
                 if (result == PasswordVerificationResult.Failed)
-                    throw new InvalidOperationException("La contrasenya actual no és correcta.");
+                    return ServiceResult<User>.Fail("La contrasenya actual no és correcta.");
 
                 user.Password = _passwordHasher.HashPassword(user, dto.NewPassword);
             }
@@ -188,7 +209,7 @@ namespace Frikollection_Api.Services
             if (dto.Biography != null) user.Biography = dto.Biography;
 
             await _context.SaveChangesAsync();
-            return user;
+            return ServiceResult<User>.Ok(user);
         }
 
         public async Task<PublicUserDto?> GetPublicProfileAsync(Guid id)
@@ -216,7 +237,9 @@ namespace Frikollection_Api.Services
 
             return new UserProfileDto
             {
+                UserId = user.UserId,
                 Username = user.Username,
+                Password = user.Password,
                 Email = user.Email,
                 Avatar = user.Avatar,
                 Nickname = user.Nickname,
@@ -271,6 +294,7 @@ namespace Frikollection_Api.Services
 
             return notifications.Select(n => new NotificationDto
             {
+                CollectionId = n.CollectionId,
                 Message = n.Message,
                 FollowerNickname = n.FollowerUser.Nickname,
                 CollectionName = n.Collection.Name,

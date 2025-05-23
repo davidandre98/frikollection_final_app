@@ -261,7 +261,7 @@ namespace Frikollection_Api.Services
             return true;
         }
 
-        public async Task<IEnumerable<UserCollectionDto>> GetFollowedCollectionsAsync(Guid userId)
+        public async Task<IEnumerable<FollowedCollectionDto>> GetFollowedCollectionsAsync(Guid userId)
         {
             var collections = await _context.UserFollowCollections
                 .Where(f => f.UserId == userId && f.Collection.Private == false)
@@ -277,12 +277,13 @@ namespace Frikollection_Api.Services
                     .ThenInclude(c => c.CollectionProducts)
                         .ThenInclude(cp => cp.Product)
                             .ThenInclude(p => p.Tags)
-                .Select(f => new UserCollectionDto
+                .Select(f => new FollowedCollectionDto
                 {
                     CollectionId = f.CollectionId,
                     Name = f.Collection.Name,
                     Private = f.Collection.Private,
-                    CreationDate = f.Collection.CreationDate,
+                    OwnerNickname = f.User.Nickname,
+                    FollowDate = f.FollowDate,
                     Products = f.Collection.CollectionProducts
                         .Select(cp => _productService.ToDto(cp.Product))
                         .ToList()
@@ -292,7 +293,7 @@ namespace Frikollection_Api.Services
             return collections;
         }
 
-        public async Task<(List<string> Added, List<string> AlreadyExists)> AddProductToCollectionAsync(AddProductToCollectionDto dto)
+        public async Task<(List<Guid> Added, List<Guid> AlreadyExists)> AddProductToCollectionAsync(AddProductToCollectionDto dto)
         {
             var existingIds = await _context.CollectionProducts
                 .Where(cp => cp.CollectionId == dto.CollectionId && dto.ProductIds.Contains(cp.ProductId))
@@ -310,17 +311,17 @@ namespace Frikollection_Api.Services
             _context.CollectionProducts.AddRange(newEntries);
             await _context.SaveChangesAsync();
 
-            var addedNames = await _context.Products
+            var addedIds = await _context.Products
                 .Where(p => newIds.Contains(p.ProductId))
-                .Select(p => p.Name)
+                .Select(p => p.ProductId)
                 .ToListAsync();
 
-            var existingNames = await _context.Products
+            var notAddedIds = await _context.Products
                 .Where(p => existingIds.Contains(p.ProductId))
-                .Select(p => p.Name)
+                .Select(p => p.ProductId)
                 .ToListAsync();
 
-            return (addedNames, existingNames);
+            return (addedIds, notAddedIds);
         }
 
         public async Task<bool> RemoveProductFromCollectionAsync(Guid collectionId, Guid productId)

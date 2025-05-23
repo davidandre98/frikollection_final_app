@@ -57,7 +57,7 @@ namespace Frikollection_Api.DTOs.User
                     yield return new ValidationResult("La nova contrasenya ha de contenir almenys una minúscula.", new[] { nameof(NewPassword) });
                 }
 
-                if (!Regex.IsMatch(NewPassword, @"\\d"))
+                if (!Regex.IsMatch(NewPassword, @"\d"))
                 {
                     yield return new ValidationResult("La nova contrasenya ha de contenir almenys un número.", new[] { nameof(NewPassword) });
                 }

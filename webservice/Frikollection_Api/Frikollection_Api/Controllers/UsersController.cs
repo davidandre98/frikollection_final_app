@@ -55,6 +55,14 @@ namespace Frikollection_Api.Controllers
             });
         }
 
+        // GET: api/users
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetAllUsers()
+        {
+            var users = await _userService.GetAllUsersAsync();
+            return Ok(users);
+        }
+
 
         // GET: api/users/{id}
         [HttpGet("{id}")]
@@ -69,20 +77,13 @@ namespace Frikollection_Api.Controllers
 
         // PUT: api/users/{id}
         [HttpPut("{id}")]
-        public async Task<ActionResult<User>> Update(Guid id, [FromBody] UpdateUserDto dto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserDto dto)
         {
-            try
-            {
-                var updatedUser = await _userService.UpdateUserAsync(id, dto);
-                if (updatedUser == null)
-                    return NotFound(new { error = "Usuari no trobat." });
+            var result = await _userService.UpdateUserAsync(id, dto);
+            if (!result.Success)
+                return BadRequest(new { error = result.ErrorMessage });
 
-                return Ok(updatedUser);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
+            return Ok(result.Data);
         }
 
         // GET: api/users/{id}/public-profile
@@ -129,7 +130,7 @@ namespace Frikollection_Api.Controllers
 
         // GET: api/users/{id}/collections/followed
         [HttpGet("{id}/collections/followed")]
-        public async Task<ActionResult<IEnumerable<UserCollectionDto>>> GetFollowedCollections(Guid id)
+        public async Task<ActionResult<IEnumerable<FollowedCollectionDto>>> GetFollowedCollections(Guid id)
         {
             var collections = await _collectionService.GetFollowedCollectionsAsync(id);
 
