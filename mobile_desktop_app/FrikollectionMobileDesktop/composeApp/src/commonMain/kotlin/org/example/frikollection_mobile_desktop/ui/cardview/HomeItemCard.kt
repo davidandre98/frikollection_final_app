@@ -1,4 +1,4 @@
-package org.example.frikollection_mobile_desktop.ui.home
+package org.example.frikollection_mobile_desktop.ui.cardview
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,17 +14,18 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.example.frikollection_mobile_desktop.ui.ServerImage
+import org.example.frikollection_mobile_desktop.utils.isAndroidPlatform
 
 @Composable
 fun HomeItemCard(
     imageUrl: String,
     title: String,
     subtitle: String,
-    imageSize: Dp = 48.dp,
+    imageSize: Dp = if (isAndroidPlatform()) 36.dp else 48.dp,
     onClick: () -> Unit
 ) {
     val isDefaultLogo = imageUrl.contains("logo_default.png")
-    val finalImageSize = if (isDefaultLogo) imageSize * 1.5f else imageSize
+    val finalImageSize = if (isDefaultLogo && !isAndroidPlatform()) imageSize * 1.5f else imageSize
 
     Card(
         modifier = Modifier

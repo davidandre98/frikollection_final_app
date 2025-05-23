@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -25,6 +26,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.example.frikollection_mobile_desktop.BottomMenuItem
 import org.example.frikollection_mobile_desktop.api.AppConfig
+import org.example.frikollection_mobile_desktop.collection.CollectionViewModel
 import org.example.frikollection_mobile_desktop.models.ProductFilter
 import org.example.frikollection_mobile_desktop.search.SearchViewModel
 import org.example.frikollection_mobile_desktop.ui.ServerImage
@@ -35,6 +37,7 @@ import org.example.frikollection_mobile_desktop.ui.headers.AppHeader
 fun ProductDetailScreen(
     productId: String,
     homeViewModel: HomeViewModel,
+    collectionViewModel: CollectionViewModel,
     searchViewModel: SearchViewModel,
     onBack: () -> Unit,
     onSearch: () -> Unit,
@@ -46,6 +49,20 @@ fun ProductDetailScreen(
     val product = state.allProducts.find { it.productId == productId }
 
     var showDetails by remember { mutableStateOf(false) }
+
+    val collectionState by collectionViewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        if (collectionState.userCollections.isEmpty()) {
+            collectionViewModel.loadCollections()
+        }
+    }
+
+    val isInWishlist = remember(collectionState) {
+        collectionViewModel.isProductInWishlist(productId)
+    }
+
+    var wishlistAdded by remember { mutableStateOf(isInWishlist) }
 
     Scaffold(
         backgroundColor = Color(0x66CCCCCC),
@@ -102,7 +119,7 @@ fun ProductDetailScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(2.dp))
 
                 Button(
                     onClick = { /* TODO: Add to collection */ },
@@ -113,7 +130,7 @@ fun ProductDetailScreen(
                     colors = ButtonDefaults.buttonColors(backgroundColor = Color.Black)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.AddCircle,
+                        imageVector = Icons.Filled.AddCircle,
                         contentDescription = "Add to collection",
                         tint = Color.White
                     )
@@ -122,7 +139,11 @@ fun ProductDetailScreen(
                 }
 
                 Button(
-                    onClick = { /* TODO: Add to wishlist */ },
+                    onClick = {
+                        collectionViewModel.toggleProductInWishlist(product) { added ->
+                            if (added) wishlistAdded = true
+                        }
+                    },
                     modifier = Modifier
                         .wrapContentWidth()
                         .height(48.dp),
@@ -130,16 +151,16 @@ fun ProductDetailScreen(
                     colors = ButtonDefaults.buttonColors(backgroundColor = Color.Black)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.FavoriteBorder,
+                        imageVector = if (wishlistAdded) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Add to wishlist",
-                        tint = Color.White,
+                        tint = if (wishlistAdded) Color.Red else Color.White,
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("ADD TO WISHLIST", color = Color.White)
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(2.dp))
 
                 Row(
                     modifier = Modifier
@@ -215,8 +236,8 @@ fun ProductDetailScreen(
                                 Text("ITEM NUMBER: ", fontWeight = FontWeight.Bold)
                                 Text(product.itemNumber.toString() ?: "-")
                             }
-
                             Spacer(modifier = Modifier.height(8.dp))
+
                             Row {
                                 Text("SEE MORE: ", fontWeight = FontWeight.Bold, color = Color.Black)
                                 Text(
@@ -228,16 +249,29 @@ fun ProductDetailScreen(
                                     }
                                 )
                             }
+
                             Row {
                                 Text("TAGS: ", fontWeight = FontWeight.Bold, color = Color.Black)
-                                Text(
-                                    text = product.supertype ?: "",
-                                    color = Color(0xFF1976D2),
-                                    modifier = Modifier.clickable {
-                                        searchViewModel.onFilterChange(ProductFilter(tags = listOfNotNull(product.supertype)))
-                                        onNavigateToSearchScreen()
+
+                                val tagNames = product.tags.mapNotNull { it.name }
+
+                                if (tagNames.isEmpty()) {
+                                    Text("-", color = Color.DarkGray)
+                                } else {
+                                    tagNames.forEachIndexed { index, tagName ->
+                                        Text(
+                                            text = tagName,
+                                            color = Color(0xFF1976D2),
+                                            modifier = Modifier.clickable {
+                                                searchViewModel.onFilterChange(ProductFilter(tags = listOf(tagName)))
+                                                onNavigateToSearchScreen()
+                                            }
+                                        )
+                                        if (index < tagNames.lastIndex) {
+                                            Text(", ", color = Color.Black)
+                                        }
                                     }
-                                )
+                                }
                             }
                         }
                     }

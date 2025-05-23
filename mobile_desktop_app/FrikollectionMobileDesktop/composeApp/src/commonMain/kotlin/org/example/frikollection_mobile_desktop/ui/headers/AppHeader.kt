@@ -22,6 +22,8 @@ fun AppHeader(
     onSearch: (() -> Unit)? = null
 ) {
     val logoSize = if (isAndroidPlatform()) 24.dp else 32.dp
+    val logoAspectRatio = 4.8f
+
     TopAppBar(
         backgroundColor = Color.White,
         contentColor = Color.Black,
@@ -53,6 +55,7 @@ fun AppHeader(
                 contentDescription = "App Logo",
                 modifier = Modifier
                     .height(logoSize)
+                    .aspectRatio(logoAspectRatio)
             )
 
             Spacer(modifier = Modifier.weight(1f))

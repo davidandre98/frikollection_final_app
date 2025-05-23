@@ -38,6 +38,10 @@ class SearchViewModel {
         _uiState.value = _uiState.value.copy(query = query)
     }
 
+    fun clearQuery() {
+        _uiState.value = _uiState.value.copy(query = "")
+    }
+
     fun onFilterChange(newFilter: ProductFilter) {
         _uiState.value = _uiState.value.copy(filter = newFilter)
     }

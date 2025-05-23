@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Divider
@@ -21,9 +23,12 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowRight
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,22 +42,41 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.example.frikollection_mobile_desktop.BottomMenuItem
+import org.example.frikollection_mobile_desktop.api.AppConfig
+import org.example.frikollection_mobile_desktop.models.collection.CollectionDto
 import org.example.frikollection_mobile_desktop.models.collection.FollowedCollectionDto
 import org.example.frikollection_mobile_desktop.models.collection.UserCollectionDto
 import org.example.frikollection_mobile_desktop.ui.cardview.CollectionCard
 import org.example.frikollection_mobile_desktop.ui.collection.CollectionFilterDropdown
+import org.example.frikollection_mobile_desktop.ui.collection.CollectionOptionsDialog
+import org.example.frikollection_mobile_desktop.ui.collection.CreateCollectionDialog
+import org.example.frikollection_mobile_desktop.ui.collection.UpdateCollectionDialog
 import org.example.frikollection_mobile_desktop.ui.footers.AppFooter
 import org.example.frikollection_mobile_desktop.ui.headers.AppHeader
 
 
 @Composable
 fun CollectionScreen(
-    viewModel: CollectionViewModel = remember { CollectionViewModel() },
+    viewModel: CollectionViewModel,
     onSearch: () -> Unit,
+    onUserCollectionClick: (UserCollectionDto) -> Unit,
+    onFollowedCollectionClick: (FollowedCollectionDto) -> Unit,
     selectedBottomItem: BottomMenuItem,
     onBottomItemSelected: (BottomMenuItem) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
+    LaunchedEffect(Unit) {
+        if (state.userCollections.isEmpty()) {
+            viewModel.loadCollections()
+        }
+    }
+
+    var showCreateDialog by remember { mutableStateOf(false) }
+    var showUpdateDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var showDeletedSuccessDialog by remember { mutableStateOf(false) }
+    var showCollectionOptionsDialog by remember { mutableStateOf(false) }
+
     var selectedFilter by remember { mutableStateOf("My Collections") }
     val filterOptions = listOf(
         "All Collections",
@@ -95,22 +119,53 @@ fun CollectionScreen(
 
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 val collections: List<Any> = when (selectedFilter) {
-                    "Public collections" -> state.userCollections.filterNot { it.private }
-                    "Private collections" -> state.userCollections.filter { it.private }
-                    "Followed collections" -> state.followedCollections
-                    "My collections" -> state.userCollections
-                    else -> state.userCollections + state.followedCollections
+                    "Public Collections" -> state.userCollections.filterNot { it.private }
+                        .sortedWith(compareBy {
+                            when (it.name.lowercase()) {
+                                "my wishlist" -> 0
+                                "my collection" -> 1
+                                else -> 2
+                            }
+                        })
+                    "Private Collections" -> state.userCollections.filter { it.private }
+                        .sortedWith(compareBy {
+                            when (it.name.lowercase()) {
+                                "my wishlist" -> 0
+                                "my collection" -> 1
+                                else -> 2
+                            }
+                        })
+                    "Followed Collections" -> state.followedCollections
+                    "My Collections" -> state.userCollections.sortedWith(compareBy {
+                        when (it.name.lowercase()) {
+                            "my wishlist" -> 0
+                            "my collection" -> 1
+                            else -> 2
+                        }
+                    })
+                    else -> {
+                        val sortedUserCollections = state.userCollections.sortedWith(compareBy {
+                            when (it.name.lowercase()) {
+                                "my wishlist" -> 0
+                                "my collection" -> 1
+                                else -> 2
+                            }
+                        })
+                        sortedUserCollections + state.followedCollections
+                    }
                 }
 
-                // CREATE NEW CollectionCard
+                // CREATE NEW Collection
                 item {
+                    val imageUrl = "${AppConfig.base_url}/images/uploads/logo/logo_new_collection.png"
                     CollectionCard(
                         title = "CREATE NEW",
                         subtitle = "Collection",
                         productCount = null,
-                        imageRes = null,
+                        imageUrl = imageUrl,
                         isPrivate = false,
-                        onClick = { /* TODO: Action */ }
+                        onClick = { showCreateDialog = true },
+                        onOptionsClick = {}
                     )
                 }
 
@@ -118,28 +173,128 @@ fun CollectionScreen(
                     when (val collection = collections[index]) {
                         is UserCollectionDto -> {
                             val stats = state.statsMap[collection.collectionId]
+
+                            val imageUrl = when (collection.name.lowercase()) {
+                                "my wishlist" -> "${AppConfig.base_url}/images/uploads/logo/logo_wishlist.png"
+                                "my collection" -> "${AppConfig.base_url}/images/uploads/logo/logo_default.png"
+                                else -> {
+                                    collection.products.firstOrNull()?.smallPicture?.let {
+                                        "${AppConfig.base_url}$it"
+                                    } ?: "${AppConfig.base_url}/images/uploads/logo/logo_pet.png"
+                                }
+                            }
+
                             CollectionCard(
                                 title = collection.name,
-                                subtitle = "Owner",
+                                subtitle = null,
                                 productCount = stats?.totalProducts ?: collection.products.size,
-                                imageRes = null,
+                                imageUrl = imageUrl,
                                 isPrivate = collection.private,
-                                onClick = { /* TODO */ }
+                                onClick = { onUserCollectionClick(collection) },
+                                onOptionsClick = {
+                                    viewModel.selectUserCollection(collection)
+                                    showCollectionOptionsDialog = true
+                                }
                             )
                         }
+
                         is FollowedCollectionDto -> {
                             val stats = state.statsMap[collection.collectionId]
+
+                            val matchedUserCollection = state.userCollections.find { it.collectionId == collection.collectionId }
+                            val imageUrl = matchedUserCollection?.products?.firstOrNull()?.smallPicture?.let {
+                                "${AppConfig.base_url}$it"
+                            } ?: "${AppConfig.base_url}/images/uploads/logo/logo_pet.png"
+
                             CollectionCard(
                                 title = collection.name,
                                 subtitle = "By: ${collection.ownerNickname}",
                                 productCount = stats?.totalProducts,
-                                imageRes = null,
+                                imageUrl = imageUrl,
                                 isPrivate = false,
-                                onClick = { /* TODO */ }
+                                onClick = { onFollowedCollectionClick(collection) },
+                                onOptionsClick = {}
                             )
                         }
                     }
                 }
+            }
+
+            if (showCreateDialog) {
+                CreateCollectionDialog(
+                    onDismiss = { showCreateDialog = false },
+                    onCreate = { name, isPrivate ->
+                        viewModel.createCollection(name, isPrivate)
+                        showCreateDialog = false
+                    }
+                )
+            }
+
+            state.selectedUserCollection?.let { selected ->
+                if (showUpdateDialog) {
+                    UpdateCollectionDialog(
+                        collection = selected,
+                        onDismiss = {
+                            showUpdateDialog = false
+                            viewModel.clearSelectedCollection()
+                        },
+                        onUpdate = { name, isPrivate ->
+                            viewModel.updateCollection(selected.collectionId, name, isPrivate)
+                            showUpdateDialog = false
+                            viewModel.clearSelectedCollection()
+                        }
+                    )
+                }
+
+                if (showCollectionOptionsDialog) {
+                    CollectionOptionsDialog(
+                        name = selected.name,
+                        onDismiss = { showCollectionOptionsDialog = false },
+                        onEdit = {
+                            showCollectionOptionsDialog = false
+                            showUpdateDialog = true
+                        },
+                        onRemove = {
+                            showCollectionOptionsDialog = false
+                            showDeleteConfirmDialog = true
+                        }
+                    )
+                }
+
+                if (showDeleteConfirmDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showDeleteConfirmDialog = false },
+                        title = { Text("Delete Collection") },
+                        text = { Text("Are you sure you want to delete this collection?") },
+                        confirmButton = {
+                            Button(onClick = {
+                                viewModel.deleteCollection(selected.collectionId)
+                                showDeleteConfirmDialog = false
+                                showDeletedSuccessDialog = true
+                            }) {
+                                Text("Yes")
+                            }
+                        },
+                        dismissButton = {
+                            Button(onClick = { showDeleteConfirmDialog = false }) {
+                                Text("Cancel")
+                            }
+                        }
+                    )
+                }
+            }
+
+            if (showDeletedSuccessDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDeletedSuccessDialog = false },
+                    title = { Text("Collection Deleted") },
+                    text = { Text("The collection has been successfully deleted.") },
+                    confirmButton = {
+                        Button(onClick = { showDeletedSuccessDialog = false }) {
+                            Text("OK")
+                        }
+                    }
+                )
             }
         }
     }

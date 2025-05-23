@@ -14,8 +14,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.example.frikollection_mobile_desktop.BottomMenuItem
+import org.example.frikollection_mobile_desktop.collection.CollectionViewModel
 import org.example.frikollection_mobile_desktop.models.ProductFilter
+import org.example.frikollection_mobile_desktop.models.product.ProductDto
 import org.example.frikollection_mobile_desktop.ui.cardview.ProductCard
+import org.example.frikollection_mobile_desktop.ui.collection.CollectionPickerDialog
 import org.example.frikollection_mobile_desktop.ui.footers.AppFooter
 import org.example.frikollection_mobile_desktop.ui.headers.AppHeader
 import org.example.frikollection_mobile_desktop.ui.filter.FilterChip
@@ -35,6 +38,7 @@ enum class SortOption(val label: String) {
 @Composable
 fun ProductListScreen(
     viewModel: HomeViewModel,
+    collectionViewModel: CollectionViewModel,
     type: String?,
     status: String?,
     initialFilter: ProductFilter,
@@ -49,6 +53,11 @@ fun ProductListScreen(
     val state by viewModel.uiState.collectAsState()
     var showSortDialog by remember { mutableStateOf(false) }
 
+    val collectionState by collectionViewModel.uiState.collectAsState()
+
+    var showCollectionDialog by remember { mutableStateOf(false) }
+    var selectedProduct by remember { mutableStateOf<ProductDto?>(null) }
+
     LaunchedEffect(type) {
         viewModel.setSelectedType(type)
     }
@@ -57,6 +66,11 @@ fun ProductListScreen(
     }
     LaunchedEffect(initialFilter) {
         viewModel.onFilterChange(initialFilter)
+    }
+    LaunchedEffect(Unit) {
+        if (collectionState.userCollections.isEmpty()) {
+            collectionViewModel.loadCollections()
+        }
     }
 
     Scaffold(
@@ -188,9 +202,21 @@ fun ProductListScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(state.filteredProducts) { product ->
+                        val isInWishlist by remember(collectionState) {
+                            mutableStateOf(collectionViewModel.isProductInWishlist(product.productId))
+                        }
+
                         ProductCard(
                             product = product,
-                            onClick = { onProductClick(product.productId) }
+                            onClick = { onProductClick(product.productId) },
+                            isInWishlist = isInWishlist,
+                            onWishlistClick = {
+                                collectionViewModel.toggleProductInWishlist(product) { /* actualització reactiva si calgués */ }
+                            },
+                            onAddClick = {
+                                selectedProduct = product
+                                showCollectionDialog = true
+                            }
                         )
                     }
                 }
@@ -206,6 +232,30 @@ fun ProductListScreen(
                     )
                 }
             }
+        }
+
+        if (showCollectionDialog && selectedProduct != null) {
+            val availableCollections = collectionState.userCollections.filter { collection ->
+                collection.products.none { it.productId == selectedProduct!!.productId }
+            }
+
+            CollectionPickerDialog(
+                product = selectedProduct!!,
+                collections = availableCollections,
+                onCollectionSelected = { collection ->
+                    collectionViewModel.addProductsToCollection(
+                        collectionId = collection.collectionId,
+                        productIds = listOf(selectedProduct!!.productId)
+                    ) { added, _ ->
+                        showCollectionDialog = false
+                        selectedProduct = null
+                    }
+                },
+                onDismiss = {
+                    showCollectionDialog = false
+                    selectedProduct = null
+                }
+            )
         }
     }
 }

@@ -17,6 +17,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,6 +35,7 @@ import org.example.frikollection_mobile_desktop.ui.ServerImage
 fun ProductCard(
     product: ProductDto,
     onClick: () -> Unit,
+    isInWishlist: Boolean,
     onWishlistClick: () -> Unit = {},
     onAddClick: () -> Unit = {}
 ) {
@@ -75,19 +77,19 @@ fun ProductCard(
                     fontSize = 12.sp,
                     color = Color.DarkGray
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
 
                 Text(
                     text = product.name,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
                     text = "Value: ${product.value?.let { String.format("%.2f €", it) } ?: "No price data"}",
                     fontSize = 10.sp,
-                    color = Color.DarkGray
+                    color = Color(0xFF1976D2)
                 )
             }
 
@@ -106,9 +108,9 @@ fun ProductCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.FavoriteBorder,
+                    imageVector = if (isInWishlist) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = "Add to wishlist",
-                    tint = Color.Black,
+                    tint = if (isInWishlist) Color.Red else Color.Black,
                     modifier = Modifier
                         .size(20.dp)
                         .clickable { onWishlistClick() }

@@ -18,9 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.example.frikollection_mobile_desktop.BottomMenuItem
 import org.example.frikollection_mobile_desktop.api.AppConfig
-import org.example.frikollection_mobile_desktop.collection.CollectionViewModel
 import org.example.frikollection_mobile_desktop.filter.FilterOptionsCache
-import org.example.frikollection_mobile_desktop.ui.home.HomeItemCard
+import org.example.frikollection_mobile_desktop.ui.cardview.HomeItemCard
 import org.example.frikollection_mobile_desktop.models.product.ProductDto
 import org.example.frikollection_mobile_desktop.ui.ServerImage
 import org.example.frikollection_mobile_desktop.ui.headers.AppHeader
@@ -30,7 +29,7 @@ import org.example.frikollection_mobile_desktop.utils.isAndroidPlatform
 
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = remember { HomeViewModel() },
+    viewModel: HomeViewModel,
     onNavigateToList: (String, String?) -> Unit, // (type, status)
     onSearch: () -> Unit,
     selectedBottomItem: BottomMenuItem,
@@ -64,7 +63,6 @@ fun HomeScreen(
             )
         }
     ) { paddingValues ->
-
         BoxWithConstraints(
             modifier = Modifier
                 .padding(paddingValues)

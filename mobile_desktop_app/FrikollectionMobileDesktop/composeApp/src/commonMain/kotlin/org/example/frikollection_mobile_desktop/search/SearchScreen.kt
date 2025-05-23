@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -39,6 +40,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.example.frikollection_mobile_desktop.BottomMenuItem
+import org.example.frikollection_mobile_desktop.collection.CollectionViewModel
 import org.example.frikollection_mobile_desktop.ui.cardview.ProductCard
 import org.example.frikollection_mobile_desktop.ui.filter.FilterChip
 import org.example.frikollection_mobile_desktop.ui.filter.hasActiveFilters
@@ -55,6 +57,16 @@ fun SearchScreen(
     onBottomItemSelected: (BottomMenuItem) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
+
+
+    val collectionViewModel = remember { CollectionViewModel() }
+    val collectionState by collectionViewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        if (collectionState.userCollections.isEmpty()) {
+            collectionViewModel.loadCollections()
+        }
+    }
 
     Scaffold(
         backgroundColor = Color(0x66CCCCCC),
@@ -165,9 +177,17 @@ fun SearchScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(state.filteredProducts) { product ->
-                    ProductCard(product = product, onClick = {
-                        onProductClick(product.productId)
-                    })
+                    val isInWishlist = collectionViewModel.isProductInWishlist(product.productId)
+
+                    ProductCard(
+                        product = product,
+                        onClick = { onProductClick(product.productId) },
+                        isInWishlist = isInWishlist,
+                        onWishlistClick = {
+                            collectionViewModel.toggleProductInWishlist(product) { /* actualització reactiva si calgués */ }
+                        },
+                        onAddClick = {}
+                    )
                 }
             }
 
